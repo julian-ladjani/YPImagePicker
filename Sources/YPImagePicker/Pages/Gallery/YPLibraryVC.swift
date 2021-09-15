@@ -322,7 +322,6 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         let completion = { (isLowResIntermediaryImage: Bool) in
             self.v.hideOverlayView()
             self.v.assetZoomableView.canZoom = true
-            self.v.assetZoomableView.panGestureRecognizer.isEnabled = false
             self.v.assetViewContainer.refreshSquareCropButton()
             self.updateCropInfo()
             if !isLowResIntermediaryImage {
@@ -334,7 +333,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         let animatedCompletion = { (isLowResIntermediaryImage: Bool) in
             self.v.hideOverlayView()
             self.v.assetZoomableView.canZoom = false
-            self.v.assetViewContainer.refreshSquareCropButton(hidden: true)
+            self.v.assetViewContainer.refreshSquareCropButton()
             self.updateCropInfo()
             if !isLowResIntermediaryImage {
                 self.v.hideLoader()
