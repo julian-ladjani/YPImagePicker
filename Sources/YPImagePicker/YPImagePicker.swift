@@ -133,6 +133,18 @@ override open func viewDidLoad() {
 								} else {
 										showCropVC(photo: photo, completion: completion)
 								}
+                        case .animatedPhoto(let animatedPhoto):
+                            let completion = { (animatedPhoto: YPMediaAnimatedPhoto) in
+                                let mediaItem = YPMediaItem.animatedPhoto(a: animatedPhoto)
+                                // Save new image or existing but modified, to the photo album.
+                                if YPConfig.shouldSaveNewPicturesToAlbum {
+                                    if animatedPhoto.fromCamera {
+                                        YPPhotoSaver.trySaveAnimatedImage(animatedPhoto.url, inAlbumNamed: YPConfig.albumName)
+                                    }
+                                }
+                                self?.didSelect(items: [mediaItem])
+                            }
+                            completion(animatedPhoto)
 						case .video(let video):
 								if YPConfig.showsVideoTrimmer {
 										let videoFiltersVC = YPVideoFiltersVC.initWith(video: video,

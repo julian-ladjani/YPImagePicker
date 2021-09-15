@@ -6,7 +6,9 @@
 //  Copyright © 2018 Yummypets. All rights reserved.
 //
 
+import SDWebImage
 import UIKit
+
 
 public class YPSelectionsGalleryVC: UIViewController, YPSelectionsGalleryCellDelegate {
     
@@ -94,6 +96,9 @@ extension YPSelectionsGalleryVC: UICollectionViewDataSource {
         case .photo(let photo):
             cell.imageView.image = photo.image
             cell.setEditable(YPConfig.showsPhotoFilters)
+        case .animatedPhoto(let animatedPhoto):
+            cell.imageView.sd_setImage(with: animatedPhoto.url, completed: nil)
+            cell.setEditable(false)
         case .video(let video):
             cell.imageView.image = video.thumbnail
             cell.setEditable(YPConfig.showsVideoTrimmer)
@@ -113,6 +118,8 @@ extension YPSelectionsGalleryVC: UICollectionViewDelegate {
             if !YPConfig.filters.isEmpty, YPConfig.showsPhotoFilters {
                 mediaFilterVC = YPPhotoFiltersVC(inputPhoto: photo, isFromSelectionVC: true)
             }
+        case .animatedPhoto(let animatedPhoto):
+            mediaFilterVC = nil
         case .video(let video):
             if YPConfig.showsVideoTrimmer {
                 mediaFilterVC = YPVideoFiltersVC.initWith(video: video, isFromSelectionVC: true)

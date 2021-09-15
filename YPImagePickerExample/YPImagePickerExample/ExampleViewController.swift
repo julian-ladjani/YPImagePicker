@@ -8,6 +8,7 @@
 
 import UIKit
 import YPImagePicker
+import SDWebImage
 import AVFoundation
 import AVKit
 import Photos
@@ -82,6 +83,8 @@ class ExampleViewController: UIViewController {
         /* Choose what media types are available in the library. Defaults to `.photo` */
         config.library.mediaType = .photoAndVideo
 		config.library.itemOverlayType = .grid
+        config.library.isSquareByDefault = false
+        config.library.onlySquare = false
         /* Enables selecting the front camera by default, useful for avatars. Defaults to false */
         // config.usesFrontCamera = true
 
@@ -203,6 +206,9 @@ class ExampleViewController: UIViewController {
                 switch firstItem {
                 case .photo(let photo):
                     self.selectedImageV.image = photo.image
+                    picker.dismiss(animated: true, completion: nil)
+                case .animatedPhoto(let animatedPhoto):
+                    self.selectedImageV.sd_setImage(with: animatedPhoto.url, completed: nil)
                     picker.dismiss(animated: true, completion: nil)
                 case .video(let video):
                     self.selectedImageV.image = video.thumbnail

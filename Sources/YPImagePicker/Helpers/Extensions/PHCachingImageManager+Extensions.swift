@@ -19,6 +19,12 @@ extension PHCachingImageManager {
         options.isSynchronous = true // Ok since we're already in a background thread
         return options
     }
+
+    private func phContentEditingInputRequestOptions() -> PHContentEditingInputRequestOptions {
+        let options = PHContentEditingInputRequestOptions()
+        options.isNetworkAccessAllowed = true
+        return options
+    }
     
     func fetchImage(for asset: PHAsset,
 					cropRect: CGRect,
@@ -45,11 +51,35 @@ extension PHCachingImageManager {
             }
         }
     }
+
+    func fetchAnimatedImage(for asset: PHAsset,
+                    cropRect: CGRect,
+                    targetSize: CGSize,
+                    callback: @escaping (UIImage, URL, [String: Any]) -> Void) {
+        let options = phContentEditingInputRequestOptions()
+
+        // Fetch Highiest quality image possible.
+        asset.requestContentEditingInput(with: options) { input, infos in
+            if let url = input?.fullSizeImageURL, let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+                let exifs = self.metadataForImageURL(url: url)
+                callback(image, url, exifs)
+            }
+        }
+    }
     
     private func metadataForImageData(data: Data) -> [String: Any] {
         if let imageSource = CGImageSourceCreateWithData(data as CFData, nil),
         let imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil),
         let metaData = imageProperties as? [String: Any] {
+            return metaData
+        }
+        return [:]
+    }
+
+    private func metadataForImageURL(url: URL) -> [String: Any] {
+        if let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
+           let imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil),
+           let metaData = imageProperties as? [String: Any] {
             return metaData
         }
         return [:]
@@ -100,6 +130,17 @@ extension PHCachingImageManager {
             DispatchQueue.main.async {
                 let isLowRes = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
                 callback(image, isLowRes)
+            }
+        }
+    }
+
+    func fetch(animatedPhoto asset: PHAsset, callback: @escaping (UIImage, URL) -> Void) {
+        let options = phContentEditingInputRequestOptions()
+
+        // Fetch Highiest quality image possible.
+        asset.requestContentEditingInput(with: options) { input, info in
+            if let url = input?.fullSizeImageURL, let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+                callback(image, url)
             }
         }
     }

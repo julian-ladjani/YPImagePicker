@@ -44,8 +44,26 @@ public class YPMediaVideo {
     }
 }
 
+public class YPMediaAnimatedPhoto {
+
+    public var thumbnail: UIImage
+    public let fromCamera: Bool
+    public let url: URL
+    public let exifMeta: [String: Any]?
+    public var asset: PHAsset?
+
+    public init(thumbnail: UIImage, url: URL, exifMeta: [String: Any]? = nil, fromCamera: Bool = false, asset: PHAsset? = nil) {
+        self.thumbnail = thumbnail
+        self.fromCamera = fromCamera
+        self.url = url
+        self.exifMeta = exifMeta
+        self.asset = asset
+    }
+}
+
 public enum YPMediaItem {
     case photo(p: YPMediaPhoto)
+    case animatedPhoto(a: YPMediaAnimatedPhoto)
     case video(v: YPMediaVideo)
 }
 
@@ -65,6 +83,13 @@ public extension YPMediaVideo {
 public extension Array where Element == YPMediaItem {
     var singlePhoto: YPMediaPhoto? {
         if let f = first, case let .photo(p) = f {
+            return p
+        }
+        return nil
+    }
+
+    var singleAnimatedPhoto: YPMediaAnimatedPhoto? {
+        if let f = first, case let .animatedPhoto(p) = f {
             return p
         }
         return nil

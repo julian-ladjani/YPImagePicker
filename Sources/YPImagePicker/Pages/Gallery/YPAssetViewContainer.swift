@@ -109,13 +109,13 @@ class YPAssetViewContainer: UIView {
         zoomableView?.fitImage(shouldCropToSquare, animated: true)
     }
     
-    public func refreshSquareCropButton() {
+    public func refreshSquareCropButton(hidden: Bool = false) {
         if onlySquare {
             squareCropButton.isHidden = true
         } else {
             if let image = zoomableView?.assetImageView.image {
                 let isImageASquare = image.size.width == image.size.height
-                squareCropButton.isHidden = isImageASquare
+                squareCropButton.isHidden = isImageASquare || hidden
             }
         }
         
