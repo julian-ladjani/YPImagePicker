@@ -236,6 +236,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             if hasPermission && !strongSelf.initialized {
                 strongSelf.initialize()
                 strongSelf.initialized = true
+            } else if !hasPermission {
+                strongSelf.delegate?.libraryViewPermissionNotGranted()
             }
         }
     }
@@ -247,7 +249,16 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         let status = PHPhotoLibrary.authorizationStatus()
         switch status {
         case .authorized, .limited:
-            block(true)
+            let fetchOptions = PHFetchOptions()
+            if PHAsset.fetchAssets(with: .image, options: fetchOptions).count == .zero {
+                let popup = YPPermissionDeniedPopup()
+                let alert = popup.popup(cancelBlock: {
+                    block(false)
+                })
+                present(alert, animated: true, completion: nil)
+            } else {
+                block(true)
+            }
         case .restricted, .denied:
             let popup = YPPermissionDeniedPopup()
             let alert = popup.popup(cancelBlock: {

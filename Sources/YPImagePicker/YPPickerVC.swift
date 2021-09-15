@@ -17,7 +17,6 @@ protocol ImagePickerDelegate: AnyObject {
 }
 
 open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
-    
     let albumsManager = YPAlbumsManager()
     var shouldHideStatusBar = false
     var initialStatusBarHidden = false
@@ -66,6 +65,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         // Camera
         if YPConfig.screens.contains(.photo) {
             cameraVC = YPCameraVC()
+            cameraVC?.delegate = self
             cameraVC?.didCapturePhoto = { [weak self] img in
                 self?.didSelectItems?([YPMediaItem.photo(p: YPMediaPhoto(image: img,
                                                                         fromCamera: true))])
@@ -75,6 +75,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         // Video
         if YPConfig.screens.contains(.video) {
             videoVC = YPVideoCaptureVC()
+            videoVC?.delegate = self
             videoVC?.didCaptureVideo = { [weak self] videoURL in
                 self?.didSelectItems?([YPMediaItem
                     .video(v: YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
@@ -325,8 +326,36 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     }
 }
 
+extension YPPickerVC: YPCameraViewDelegate {
+    public func cameraViewPermissionNotGranted() {
+        let nextPage = currentPage + 1
+        let currentScreen: YPPickerScreen
+        switch mode {
+        case .library:
+            currentScreen = .library
+        case .camera:
+            currentScreen = .photo
+        case .video:
+            currentScreen = .video
+        }
+        if controllers.count > nextPage && YPImagePickerConfiguration.shared.startOnScreen == currentScreen {
+            showPage(nextPage)
+        } else {
+            dismiss(animated: true, completion: nil)
+        }
+    }
+}
+
 extension YPPickerVC: YPLibraryViewDelegate {
-    
+    public func libraryViewPermissionNotGranted() {
+        let nextPage = currentPage + 1
+        if controllers.count > nextPage && YPImagePickerConfiguration.shared.startOnScreen == .library {
+            showPage(nextPage)
+        } else {
+            noPhotosForOptions()
+        }
+    }
+
     public func libraryViewDidTapNext() {
         libraryVC?.isProcessing = true
         DispatchQueue.main.async {

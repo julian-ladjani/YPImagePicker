@@ -19,11 +19,9 @@ extension YPPermissionCheckable where Self: UIViewController {
         checkPermissionToAccessVideo { _ in }
     }
     
-    func doAfterPermissionCheck(block:@escaping () -> Void) {
+    func doAfterPermissionCheck(block:@escaping (Bool) -> Void) {
         checkPermissionToAccessVideo { hasPermission in
-            if hasPermission {
-                block()
-            }
+            block(hasPermission)
         }
     }
     
