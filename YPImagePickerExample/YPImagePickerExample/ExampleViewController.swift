@@ -125,6 +125,7 @@ class ExampleViewController: UIViewController {
 
         /* Defines the time limit for videos from the library.
            Defaults to 60 seconds. */
+        config.onlySquareImagesFromCamera = false
         config.video.libraryTimeLimit = 500.0
 
         /* Adds a Crop step in the photo taking process, after filters. Defaults to .none */
@@ -251,6 +252,10 @@ class ExampleViewController: UIViewController {
         //    })
         //}
 
+        picker.modalPresentationStyle = .popover
+        if #available(iOS 13.0, *) {
+            picker.isModalInPresentation = true
+        }
         present(picker, animated: true, completion: nil)
     }
 }

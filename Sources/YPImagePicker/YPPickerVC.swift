@@ -176,6 +176,12 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         }
     
         updateUI()
+
+        if vc == libraryVC {
+            libraryViewDidToggleMultipleSelection(enabled: libraryVC?.multipleSelectionEnabled ?? false)
+        } else {
+            libraryViewDidToggleMultipleSelection(enabled: false)
+        }
     }
     
     func stopCurrentCamera() {
@@ -383,12 +389,11 @@ extension YPPickerVC: YPLibraryViewDelegate {
     }
     
     public func libraryViewDidToggleMultipleSelection(enabled: Bool) {
-        var offset = v.header.frame.height
-        if #available(iOS 11.0, *) {
-            offset += v.safeAreaInsets.bottom
-        }
-        
-        v.header.bottomConstraint?.constant = enabled ? offset : 0
+        let bottomOffset = v.safeAreaInsets.bottom
+        let offset = v.header.frame.height + bottomOffset
+
+        v.header.bottomConstraint?.constant = enabled ? -offset : 0
+        v.bottomView.bottomConstraint?.constant = enabled ? -bottomOffset : 0
         v.layoutIfNeeded()
         updateUI()
     }

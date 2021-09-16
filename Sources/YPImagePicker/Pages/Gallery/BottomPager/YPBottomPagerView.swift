@@ -12,6 +12,11 @@ import Stevia
 final class YPBottomPagerView: UIView {
     
     var header = YPPagerMenu()
+    var bottomView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .offWhiteOrBlack
+        return view
+    }()
     var scrollView = UIScrollView()
     
     convenience init() {
@@ -21,20 +26,25 @@ final class YPBottomPagerView: UIView {
         subviews {
             scrollView
             header
+            bottomView
         }
         
         layout(
             0,
             |scrollView|,
             0,
-            |header| ~ 44
+            |header| ~ 44,
+            0,
+            |bottomView|
         )
         
         if #available(iOS 11.0, *) {
-            header.Bottom == safeAreaLayoutGuide.Bottom
+            bottomView.Top == safeAreaLayoutGuide.Bottom
         } else {
-            header.bottom(0)
+            bottomView.Top == 0
         }
+        bottomView.Bottom == 0
+        bottomView.heightConstraint?.constant = (YPConfig.hidesBottomBar || (YPConfig.screens.count == 1)) ? 0 : self.safeAreaInsets.bottom
         header.heightConstraint?.constant = (YPConfig.hidesBottomBar || (YPConfig.screens.count == 1)) ? 0 : 44
         
         clipsToBounds = false
