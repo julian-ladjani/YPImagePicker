@@ -23,7 +23,8 @@ public class YPVideoFiltersVC: UIViewController, IsMediaFilterVC {
 
     public var inputVideo: YPMediaVideo!
     public var inputAsset: AVAsset { return AVAsset(url: inputVideo.url) }
-    
+
+    override open var prefersStatusBarHidden: Bool { return YPConfig.hidesStatusBar }
     private var playbackTimeCheckerTimer: Timer?
     private var imageGenerator: AVAssetImageGenerator?
     private var isFromSelectionVC = false
