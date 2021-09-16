@@ -11,7 +11,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/freshOS/Stevia", .exact("5.1.0")),
         .package(url: "https://github.com/HHK1/PryntTrimmerView", .exact("4.0.2")),
-        .package(url: "https://github.com/SDWebImage/SDWebImage.git", from: "5.11.1")
+        .package(url: "https://github.com/SDWebImage/SDWebImage.git", .exact("5.11.1"))
     ],
     targets: [
         .target(name: "YPImagePicker", dependencies: ["Stevia", "PryntTrimmerView", "SDWebImage"]),
