@@ -180,6 +180,7 @@ public struct YPImagePickerConfiguration {
 public struct YPConfigLibrary {
     
     public var options: PHFetchOptions?
+    public var sizeLimit: Int64? = nil
 
     /// Set this to true if you want to force the library output to be a squared image. Defaults to false.
     public var onlySquare = false
@@ -244,11 +245,15 @@ public struct YPConfigVideo {
     
     /// Defines the time limit for recording videos.
     /// Default is 60 seconds.
-    public var recordingTimeLimit: TimeInterval = 60.0
+    public var recordingTimeLimit: TimeInterval? = 60.0
+
+    /// Defines the sie limit for recording videos (in bytes).
+    /// Default is  noLimit.
+    public var recordingSizeLimit: Int64? = nil
     
     /// Defines the time limit for videos from the library.
     /// Defaults to 60 seconds.
-    public var libraryTimeLimit: TimeInterval = 60.0
+    public var libraryTimeLimit: TimeInterval? = 60.0
     
     /// Defines the minimum time for the video
     /// Defaults to 3 seconds.

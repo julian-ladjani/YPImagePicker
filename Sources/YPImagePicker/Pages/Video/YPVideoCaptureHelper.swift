@@ -23,7 +23,8 @@ class YPVideoCaptureHelper: NSObject {
     private let sessionQueue = DispatchQueue(label: "YPVideoVCSerialQueue")
     private var videoInput: AVCaptureDeviceInput?
     private var videoOutput = AVCaptureMovieFileOutput()
-    private var videoRecordingTimeLimit: TimeInterval = 0
+    private var videoRecordingTimeLimit: TimeInterval? = nil
+    private var videoRecordingSizeLimit: Int64? = nil
     private var isCaptureSessionSetup: Bool = false
     private var isPreviewSetup = false
     private var previewView: UIView!
@@ -32,9 +33,10 @@ class YPVideoCaptureHelper: NSObject {
     
     // MARK: - Init
     
-    public func start(previewView: UIView, withVideoRecordingLimit: TimeInterval, completion: @escaping () -> Void) {
+    public func start(previewView: UIView, withVideoRecordingLimit: TimeInterval?, withVideoRecordingSizeLimit: Int64?, completion: @escaping () -> Void) {
         self.previewView = previewView
         self.videoRecordingTimeLimit = withVideoRecordingLimit
+        self.videoRecordingSizeLimit = withVideoRecordingSizeLimit
         sessionQueue.async { [weak self] in
             guard let strongSelf = self else {
                 return
@@ -224,9 +226,14 @@ class YPVideoCaptureHelper: NSObject {
             }
             
             let timeScale: Int32 = 30 // FPS
-            let maxDuration =
-                CMTimeMakeWithSeconds(self.videoRecordingTimeLimit, preferredTimescale: timeScale)
+            let maxDuration: CMTime
+            if let videoRecordingTimeLimit = self.videoRecordingTimeLimit, videoRecordingTimeLimit > 0 {
+                maxDuration = CMTimeMakeWithSeconds(videoRecordingTimeLimit, preferredTimescale: timeScale)
+            } else {
+                maxDuration = .invalid
+            }
             videoOutput.maxRecordedDuration = maxDuration
+            videoOutput.maxRecordedFileSize = self.videoRecordingSizeLimit ?? .zero
             videoOutput.minFreeDiskSpaceLimit = 1024 * 1024
             if YPConfig.video.fileType == .mp4 {
                 videoOutput.movieFragmentInterval = .invalid // Allows audio for MP4s over 10 seconds.
@@ -245,9 +252,20 @@ class YPVideoCaptureHelper: NSObject {
     @objc
     func tick() {
         let timeElapsed = Date().timeIntervalSince(dateVideoStarted)
-        let progress: Float = Float(timeElapsed) / Float(videoRecordingTimeLimit)
+        let timeProgress: Float
+        let sizeProgress: Float
+        if let videoRecordingTimeLimit = videoRecordingTimeLimit, videoRecordingTimeLimit > 0 {
+            timeProgress = Float(timeElapsed) / Float(videoRecordingTimeLimit)
+        } else {
+            timeProgress = .zero
+        }
+        if let videoRecordingSizeLimit = videoRecordingSizeLimit, videoRecordingSizeLimit > 0 {
+            sizeProgress = Float(videoOutput.recordedFileSize) / Float(videoRecordingSizeLimit)
+        } else {
+            sizeProgress = .zero
+        }
         DispatchQueue.main.async {
-            self.videoRecordingProgress?(progress, timeElapsed)
+            self.videoRecordingProgress?(max(sizeProgress, timeProgress), timeElapsed)
         }
     }
     

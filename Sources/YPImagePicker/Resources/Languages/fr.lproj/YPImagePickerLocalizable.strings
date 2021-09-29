@@ -20,3 +20,5 @@
 "YPImagePickerVideoTooLong" = "La durée d'une vidéo ne doit pas dépasser %@ secondes";
 "YPImagePickerVideoTooShort" = "La vidéo doit durer %@ secondes ou plus";
 "YPImagePickerWarningItemsLimit" = "La limite est de %d photos ou vidéos";
+"YPImagePickerLibrarySizeTitle" = "Taille du fichier";
+"YPImagePickerLibrarySizeTooLong" = "La taille d'un fichier ne doit pas dépasser %@ MB";

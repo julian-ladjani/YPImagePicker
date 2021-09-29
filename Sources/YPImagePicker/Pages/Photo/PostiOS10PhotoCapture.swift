@@ -44,8 +44,6 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
         
         // Catpure Highest Quality possible.
         settings.isHighResolutionPhotoEnabled = false
-        settings.processedFileType = .jpg
-        settings.format[
 
         // Set flash mode.
         if let deviceInput = deviceInput {

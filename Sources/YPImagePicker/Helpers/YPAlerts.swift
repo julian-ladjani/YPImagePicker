@@ -11,7 +11,7 @@ import UIKit
 struct YPAlert {
     static func videoTooLongAlert(_ sourceView: UIView) -> UIAlertController {
         let msg = String(format: YPConfig.wordings.videoDurationPopup.tooLongMessage,
-                         "\(YPConfig.video.libraryTimeLimit)")
+                         "\(YPConfig.video.libraryTimeLimit ?? 60.0)")
         let alert = UIAlertController(title: YPConfig.wordings.videoDurationPopup.title,
                                       message: msg,
                                       preferredStyle: .actionSheet)
@@ -39,6 +39,24 @@ struct YPAlert {
 												  y: sourceView.bounds.midY,
 												  width: 0,
 												  height: 0)
+            popoverController.permittedArrowDirections = []
+        }
+        alert.addAction(UIAlertAction(title: YPConfig.wordings.ok, style: UIAlertAction.Style.default, handler: nil))
+        return alert
+    }
+
+    static func sizeTooLongAlert(_ sourceView: UIView) -> UIAlertController {
+        let msg = String(format: YPConfig.wordings.librarySizePopup.tooLongMessage,
+                         "\(Float(YPConfig.library.sizeLimit ?? 0) / (1024.0 * 1024.0))")
+        let alert = UIAlertController(title: YPConfig.wordings.librarySizePopup.title,
+                                      message: msg,
+                                      preferredStyle: .actionSheet)
+        if let popoverController = alert.popoverPresentationController {
+            popoverController.sourceView = sourceView
+            popoverController.sourceRect = CGRect(x: sourceView.bounds.midX,
+                                                  y: sourceView.bounds.midY,
+                                                  width: 0,
+                                                  height: 0)
             popoverController.permittedArrowDirections = []
         }
         alert.addAction(UIAlertAction(title: YPConfig.wordings.ok, style: UIAlertAction.Style.default, handler: nil))

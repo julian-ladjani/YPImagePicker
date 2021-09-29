@@ -65,7 +65,7 @@ public class YPVideoCaptureVC: UIViewController, YPPermissionCheckable {
                 return
             }
             self?.videoHelper.start(previewView: strongSelf.v.previewViewContainer,
-                                    withVideoRecordingLimit: YPConfig.video.recordingTimeLimit,
+                                    withVideoRecordingLimit: YPConfig.video.recordingTimeLimit, withVideoRecordingSizeLimit: YPConfig.video.recordingSizeLimit,
                                     completion: {
                                         DispatchQueue.main.async {
                                             self?.v.shotButton.isEnabled = true

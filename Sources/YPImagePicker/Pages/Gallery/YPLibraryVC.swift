@@ -394,9 +394,16 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         guard asset.mediaType == .video else {
             return true
         }
-        
-        let tooLong = floor(asset.duration) > YPConfig.video.libraryTimeLimit
+
+
+        let tooLong: Bool
+        if let libraryTimeLimit = YPConfig.video.libraryTimeLimit {
+            tooLong = floor(asset.duration) > libraryTimeLimit
+        } else {
+            tooLong = false
+        }
         let tooShort = floor(asset.duration) < YPConfig.video.minimumTimeLimit
+
         
         if tooLong || tooShort {
             DispatchQueue.main.async {
@@ -406,6 +413,28 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             return false
         }
         
+        return true
+    }
+
+
+    private func fitsSizeLimits(asset: PHAsset) -> Bool {
+        let resource = PHAssetResource.assetResources(for: asset)
+        let tooLong: Bool
+        if let librarySizeLimit = YPConfig.library.sizeLimit,
+           let fileSize: Int64 = resource.first?.value(forKey: "fileSize") as? Int64 {
+            tooLong = fileSize > librarySizeLimit
+        } else {
+            tooLong = false
+        }
+
+        if tooLong {
+            DispatchQueue.main.async {
+                let alert = YPAlert.sizeTooLongAlert(self.view)
+                self.present(alert, animated: true, completion: nil)
+            }
+            return false
+        }
+
         return true
     }
     
@@ -478,15 +507,15 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                                     y: yCrop,
                                     width: ts.width,
                                     height: ts.height)
-        
-        guard fitsVideoLengthLimits(asset: asset) else {
+
+        guard fitsVideoLengthLimits(asset: asset), fitsSizeLimits(asset: asset) else {
             return
         }
         
         if YPConfig.video.automaticTrimToTrimmerMaxDuration {
             fetchVideoAndCropWithDuration(for: asset,
                                           withCropRect: resultCropRect,
-                                          duration: YPConfig.video.trimmerMaxDuration,
+                                             duration: YPConfig.video.trimmerMaxDuration,
                                           callback: callback)
         } else {
             delegate?.libraryViewDidTapNext()
