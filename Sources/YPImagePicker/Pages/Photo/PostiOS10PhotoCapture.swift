@@ -38,11 +38,15 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
         // Catpure Heif when available.
         if photoOutput.availablePhotoCodecTypes.contains(.hevc) {
             settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc])
+        } else {
+            settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
         }
         
         // Catpure Highest Quality possible.
-        settings.isHighResolutionPhotoEnabled = true
-        
+        settings.isHighResolutionPhotoEnabled = false
+        settings.processedFileType = .jpg
+        settings.format[
+
         // Set flash mode.
         if let deviceInput = deviceInput {
             if deviceInput.device.isFlashAvailable {
