@@ -35,6 +35,8 @@ public struct YPFonts {
 
     public var navigationBarTitleFont: UIFont?
 
+    public var fileTooBigFont: UIFont = UIFont.preferredFont(forTextStyle: .body)
+
     /// The font used in the UINavigationBar rightBarButtonItem
     public var rightBarButtonFont: UIFont?
 

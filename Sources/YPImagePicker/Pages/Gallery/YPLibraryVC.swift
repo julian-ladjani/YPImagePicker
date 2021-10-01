@@ -415,28 +415,6 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         
         return true
     }
-
-
-    private func fitsSizeLimits(asset: PHAsset) -> Bool {
-        let resource = PHAssetResource.assetResources(for: asset)
-        let tooLong: Bool
-        if let librarySizeLimit = YPConfig.library.sizeLimit,
-           let fileSize: Int64 = resource.first?.value(forKey: "fileSize") as? Int64 {
-            tooLong = fileSize > librarySizeLimit
-        } else {
-            tooLong = false
-        }
-
-        if tooLong {
-            DispatchQueue.main.async {
-                let alert = YPAlert.sizeTooLongAlert(self.view)
-                self.present(alert, animated: true, completion: nil)
-            }
-            return false
-        }
-
-        return true
-    }
     
     // MARK: - Stored Crop Position
     
@@ -508,11 +486,11 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                                     width: ts.width,
                                     height: ts.height)
 
-        guard fitsVideoLengthLimits(asset: asset), fitsSizeLimits(asset: asset) else {
+        guard fitsVideoLengthLimits(asset: asset) else {
             return
         }
         
-        if YPConfig.video.automaticTrimToTrimmerMaxDuration {
+        if YPConfig.video.automaticTrimToTrimmerMaxDuration && YPConfig.video.trimmerMaxDuration != .zero {
             fetchVideoAndCropWithDuration(for: asset,
                                           withCropRect: resultCropRect,
                                              duration: YPConfig.video.trimmerMaxDuration,
@@ -575,7 +553,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                         if asset.asset.playbackStyle == .imageAnimated {
                             self.fetchAnimatedImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, url, exifMeta in
                                 let animatedPhoto = YPMediaAnimatedPhoto(
-                                    thumbnail: image.resizedImageIfNeeded(),
+                                    thumbnail: image.resizedImageIfNeeded(targedImageSize: YPConfig.library.targetImageSize),
                                     url: url,
                                     exifMeta: exifMeta,
                                     asset: asset.asset
@@ -585,7 +563,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                             }
                         } else {
                             self.fetchImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, exifMeta in
-                                let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(),
+                                let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(targedImageSize: YPConfig.library.targetImageSize),
                                                          exifMeta: exifMeta, asset: asset.asset)
                                 resultMediaItems.append(YPMediaItem.photo(p: photo))
                                 asyncGroup.leave()
@@ -668,7 +646,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                             DispatchQueue.main.async {
                                 self.delegate?.libraryViewFinishedLoading()
                                 let animatedPhoto = YPMediaAnimatedPhoto(
-                                    thumbnail: image.resizedImageIfNeeded(),
+                                    thumbnail: image.resizedImageIfNeeded(targedImageSize: YPConfig.library.targetImageSize),
                                     url: url,
                                     exifMeta: exifMeta,
                                     asset: asset
@@ -680,7 +658,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                         self.fetchImageAndCrop(for: asset) { image, exifMeta in
                             DispatchQueue.main.async {
                                 self.delegate?.libraryViewFinishedLoading()
-                                let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(),
+                                let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(targedImageSize: YPConfig.library.targetImageSize),
                                                          exifMeta: exifMeta,
                                                          asset: asset)
                                 photoCallback(photo)

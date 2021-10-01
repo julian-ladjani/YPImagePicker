@@ -47,6 +47,11 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     open override func viewDidLoad() {
         super.viewDidLoad()
 
+        if #available(iOS 13.0, *) {
+            navigationController?.navigationBar.scrollEdgeAppearance = navigationController?.navigationBar.standardAppearance
+            navigationController?.navigationBar.isTranslucent = true
+        }
+
         view.backgroundColor = YPConfig.colors.safeAreaBackgroundColor
         
         delegate = self

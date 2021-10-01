@@ -19,6 +19,7 @@ public class YPMediaPhoto {
     public let fromCamera: Bool
     public let exifMeta: [String: Any]?
     public var asset: PHAsset?
+    public var size: Int64
     
     public init(image: UIImage, exifMeta: [String: Any]? = nil, fromCamera: Bool = false, asset: PHAsset? = nil) {
         self.originalImage = image
@@ -26,6 +27,7 @@ public class YPMediaPhoto {
         self.fromCamera = fromCamera
         self.exifMeta = exifMeta
         self.asset = asset
+        self.size = image.getSize()
     }
 }
 
@@ -35,12 +37,14 @@ public class YPMediaVideo {
     public var url: URL
     public let fromCamera: Bool
     public var asset: PHAsset?
+    public var size: Int64
 
     public init(thumbnail: UIImage, videoURL: URL, fromCamera: Bool = false, asset: PHAsset? = nil) {
         self.thumbnail = thumbnail
         self.url = videoURL
         self.fromCamera = fromCamera
         self.asset = asset
+        self.size = url.getSize()
     }
 }
 
@@ -51,6 +55,7 @@ public class YPMediaAnimatedPhoto {
     public let url: URL
     public let exifMeta: [String: Any]?
     public var asset: PHAsset?
+    public var size: Int64
 
     public init(thumbnail: UIImage, url: URL, exifMeta: [String: Any]? = nil, fromCamera: Bool = false, asset: PHAsset? = nil) {
         self.thumbnail = thumbnail
@@ -58,6 +63,7 @@ public class YPMediaAnimatedPhoto {
         self.url = url
         self.exifMeta = exifMeta
         self.asset = asset
+        self.size = url.getSize()
     }
 }
 
@@ -65,6 +71,18 @@ public enum YPMediaItem {
     case photo(p: YPMediaPhoto)
     case animatedPhoto(a: YPMediaAnimatedPhoto)
     case video(v: YPMediaVideo)
+
+    // Size in bytes
+    var size: Int64 {
+        switch self {
+        case let .photo(p):
+            return p.size
+        case let .animatedPhoto(a):
+            return a.size
+        case let .video(v):
+            return v.size
+        }
+    }
 }
 
 // MARK: - Compression

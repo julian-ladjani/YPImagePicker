@@ -34,6 +34,8 @@ public struct YPImagePickerConfiguration {
     
     // Library configuration
     public var library = YPConfigLibrary()
+
+    public var photo = YPConfigPhoto()
     
     // Video configuration
     public var video = YPConfigVideo()
@@ -83,11 +85,7 @@ public struct YPImagePickerConfiguration {
 
     /// Adds a Crop step in the photo taking process, after filters.  Defaults to .none
     public var showsCrop: YPCropType = .none
-    
-    /// Ex: cappedTo:1024 will make sure images from the library or the camera will be
-    /// resized to fit in a 1024x1024 box. Defaults to original image size.
-    public var targetImageSize = YPImageSize.original
-    
+
     /// Adds a Overlay View to the camera
     public var overlayView: UIView?
 
@@ -221,6 +219,8 @@ public struct YPConfigLibrary {
     
     /// Set the overlay type shown on top of the selected library item
     public var itemOverlayType: YPItemOverlayType = .grid
+
+    public var targetImageSize = YPImageSize.original
 }
 
 /// Encapsulates video specific settings.
@@ -246,10 +246,6 @@ public struct YPConfigVideo {
     /// Defines the time limit for recording videos.
     /// Default is 60 seconds.
     public var recordingTimeLimit: TimeInterval? = 60.0
-
-    /// Defines the sie limit for recording videos (in bytes).
-    /// Default is  noLimit.
-    public var recordingSizeLimit: Int64? = nil
     
     /// Defines the time limit for videos from the library.
     /// Defaults to 60 seconds.
@@ -279,7 +275,11 @@ public struct YPConfigVideo {
 /// Encapsulates gallery specific settings.
 public struct YPConfigSelectionsGallery {
     /// Defines if the remove button should be hidden when showing the gallery. Default is true.
-    public var hidesRemoveButton = true
+    public var hidesRemoveButton = false
+}
+
+public struct YPConfigPhoto {
+    public var targetImageSize = YPImageSize.original
 }
 
 public enum YPItemOverlayType {
