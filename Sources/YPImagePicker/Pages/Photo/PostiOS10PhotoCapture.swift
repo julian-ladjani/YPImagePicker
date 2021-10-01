@@ -125,7 +125,8 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
 
         cgImage = cgImage.cropping(to: cropRect)!
         let croppedUIImage = UIImage(cgImage: cgImage, scale: 1.0, orientation: originalImage.imageOrientation)
-        guard let croppedData = croppedUIImage.heicData(compressionQuality: 0.8) ?? croppedUIImage.jpegData(compressionQuality: 0.8) else {
+        let compressionQuality = YPConfig.photo.targetImageCompression
+        guard let croppedData = croppedUIImage.heicData(compressionQuality: compressionQuality) ?? croppedUIImage.jpegData(compressionQuality: compressionQuality) else {
             throw YPPhotoError("cropped data is nil")
         }
         return croppedData
@@ -134,7 +135,7 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
 
 extension UIImage {
 
-    func heicData(compressionQuality: Float) -> Data? {
+    func heicData(compressionQuality: CGFloat) -> Data? {
         let data = NSMutableData()
         guard let imageDestination =
                 CGImageDestinationCreateWithData(

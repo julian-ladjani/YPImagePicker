@@ -280,6 +280,7 @@ public struct YPConfigSelectionsGallery {
 
 public struct YPConfigPhoto {
     public var targetImageSize = YPImageSize.original
+    public var targetImageCompression: CGFloat = 1.0
 }
 
 public enum YPItemOverlayType {

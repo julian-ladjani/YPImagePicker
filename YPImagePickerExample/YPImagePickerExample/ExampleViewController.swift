@@ -89,6 +89,7 @@ class ExampleViewController: UIViewController {
         config.video.compression = AVAssetExportPresetMediumQuality
 
         config.photo.targetImageSize = .cappedTo(size: 1080)
+        config.photo.targetImageCompression = 0.9
 
         let picker = YPImagePicker(configuration: config)
 
