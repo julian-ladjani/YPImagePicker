@@ -67,7 +67,7 @@ class YPVideoProcessor {
         }
         
         // input clip
-        let clipVideoTrack = asset.tracks(withMediaType: .video)[0]
+        guard let clipVideoTrack = asset.tracks(withMediaType: .video).first else { return }
         
         // make it square
         let videoComposition = AVMutableVideoComposition()
