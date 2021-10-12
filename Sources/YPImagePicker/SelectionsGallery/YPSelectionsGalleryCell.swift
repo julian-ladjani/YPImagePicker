@@ -9,7 +9,7 @@
 import UIKit
 import Stevia
 
-public protocol YPSelectionsGalleryCellDelegate: class {
+public protocol YPSelectionsGalleryCellDelegate: AnyObject {
     func selectionsGalleryCellDidTapRemove(cell: YPSelectionsGalleryCell)
 }
 
@@ -17,6 +17,8 @@ public class YPSelectionsGalleryCell: UICollectionViewCell {
     
     weak var delegate: YPSelectionsGalleryCellDelegate?
     let imageView = UIImageView()
+    let fileTooBigContainerView = UIView()
+    let fileTooBigLabel = UILabel()
     let editIcon = UIView()
     let editSquare = UIView()
     let removeButton = UIButton()
@@ -26,19 +28,37 @@ public class YPSelectionsGalleryCell: UICollectionViewCell {
     
         subviews {
             imageView
+            fileTooBigContainerView
             editIcon
             editSquare
             removeButton
         }
+        fileTooBigContainerView.subviews {
+            fileTooBigLabel
+        }
+
+        fileTooBigContainerView.layout(
+            layout(
+                0,
+                |-fileTooBigLabel-|,
+                0
+            )
+        )
         
         imageView.fillContainer()
+        fileTooBigContainerView.fillContainer()
         editIcon.size(32).left(12).bottom(12)
         editSquare.size(16)
         editSquare.CenterY == editIcon.CenterY
         editSquare.CenterX == editIcon.CenterX
         
         removeButton.top(12).trailing(12)
-        
+
+        fileTooBigContainerView.backgroundColor = .darkGray.withAlphaComponent(0.5)
+        fileTooBigLabel.numberOfLines = 0
+        fileTooBigLabel.textAlignment = .center
+        fileTooBigLabel.textColor = .white
+        fileTooBigLabel.font = YPConfig.fonts.fileTooBigFont
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = 0.2
         layer.shadowOffset = CGSize(width: 4, height: 7)

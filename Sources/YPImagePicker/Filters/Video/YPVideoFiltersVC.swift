@@ -23,7 +23,8 @@ public class YPVideoFiltersVC: UIViewController, IsMediaFilterVC {
 
     public var inputVideo: YPMediaVideo!
     public var inputAsset: AVAsset { return AVAsset(url: inputVideo.url) }
-    
+
+    override open var prefersStatusBarHidden: Bool { return YPConfig.hidesStatusBar }
     private var playbackTimeCheckerTimer: Timer?
     private var imageGenerator: AVAssetImageGenerator?
     private var isFromSelectionVC = false
@@ -50,7 +51,15 @@ public class YPVideoFiltersVC: UIViewController, IsMediaFilterVC {
         trimmerView.mainColor = YPConfig.colors.trimmerMainColor
         trimmerView.handleColor = YPConfig.colors.trimmerHandleColor
         trimmerView.positionBarColor = YPConfig.colors.positionLineColor
-        trimmerView.maxDuration = YPConfig.video.trimmerMaxDuration
+
+        let videoDuration: Double = {
+            let asset = AVAsset(url: inputVideo.url)
+            let duration = asset.duration
+            let durationTime = CMTimeGetSeconds(duration)
+            return durationTime
+        }()
+
+        trimmerView.maxDuration = YPConfig.video.trimmerMaxDuration == 0 ? videoDuration : YPConfig.video.trimmerMaxDuration
         trimmerView.minDuration = YPConfig.video.trimmerMinDuration
         
         coverThumbSelectorView.thumbBorderColor = YPConfig.colors.coverSelectorBorderColor

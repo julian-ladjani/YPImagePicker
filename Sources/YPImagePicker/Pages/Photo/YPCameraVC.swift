@@ -13,6 +13,7 @@ import Photos
 public class YPCameraVC: UIViewController, UIGestureRecognizerDelegate, YPPermissionCheckable {
     
     public var didCapturePhoto: ((UIImage) -> Void)?
+    weak var delegate: YPCameraViewDelegate?
     let photoCapture = newPhotoCapture()
     let v: YPCameraView!
     var isInited = false
@@ -55,8 +56,12 @@ public class YPCameraVC: UIViewController, UIGestureRecognizerDelegate, YPPermis
     }
     
     func start() {
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
             guard let strongSelf = self else {
+                return
+            }
+            if !hasPermission {
+                strongSelf.delegate?.cameraViewPermissionNotGranted()
                 return
             }
             self?.photoCapture.start(with: strongSelf.v.previewViewContainer, completion: {
@@ -74,7 +79,11 @@ public class YPCameraVC: UIViewController, UIGestureRecognizerDelegate, YPPermis
             return
         }
         
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
+            if !hasPermission {
+                self?.delegate?.cameraViewPermissionNotGranted()
+                return
+            }
             self?.focus(recognizer: recognizer)
         }
     }
@@ -101,7 +110,11 @@ public class YPCameraVC: UIViewController, UIGestureRecognizerDelegate, YPPermis
             return
         }
         
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
+            if !hasPermission {
+                self?.delegate?.cameraViewPermissionNotGranted()
+                return
+            }
             self?.zoom(recognizer: recognizer)
         }
     }
@@ -116,7 +129,11 @@ public class YPCameraVC: UIViewController, UIGestureRecognizerDelegate, YPPermis
     
     @objc
     func flipButtonTapped() {
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
+            if !hasPermission {
+                self?.delegate?.cameraViewPermissionNotGranted()
+                return
+            }
             self?.photoCapture.flipCamera {
                 self?.refreshFlashButton()
             }
@@ -125,7 +142,11 @@ public class YPCameraVC: UIViewController, UIGestureRecognizerDelegate, YPPermis
     
     @objc
     func shotButtonTapped() {
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
+            if !hasPermission {
+                self?.delegate?.cameraViewPermissionNotGranted()
+                return
+            }
             self?.shoot()
         }
     }
@@ -156,7 +177,7 @@ public class YPCameraVC: UIViewController, UIGestureRecognizerDelegate, YPPermis
             
             DispatchQueue.main.async {
                 let noOrietationImage = image.resetOrientation()
-                self.didCapturePhoto?(noOrietationImage.resizedImageIfNeeded())
+                self.didCapturePhoto?(noOrietationImage.resizedImageIfNeeded(targedImageSize: YPConfig.photo.targetImageSize))
             }
         }
     }

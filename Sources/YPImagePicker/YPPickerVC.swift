@@ -17,7 +17,6 @@ protocol ImagePickerDelegate: AnyObject {
 }
 
 open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
-    
     let albumsManager = YPAlbumsManager()
     var shouldHideStatusBar = false
     var initialStatusBarHidden = false
@@ -48,6 +47,13 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     open override func viewDidLoad() {
         super.viewDidLoad()
 
+        if #available(iOS 15, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            navigationController?.navigationBar.scrollEdgeAppearance = appearance
+            navigationController?.navigationBar.standardAppearance = appearance
+        }
+
         view.backgroundColor = YPConfig.colors.safeAreaBackgroundColor
         
         delegate = self
@@ -66,6 +72,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         // Camera
         if YPConfig.screens.contains(.photo) {
             cameraVC = YPCameraVC()
+            cameraVC?.delegate = self
             cameraVC?.didCapturePhoto = { [weak self] img in
                 self?.didSelectItems?([YPMediaItem.photo(p: YPMediaPhoto(image: img,
                                                                         fromCamera: true))])
@@ -75,6 +82,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         // Video
         if YPConfig.screens.contains(.video) {
             videoVC = YPVideoCaptureVC()
+            videoVC?.delegate = self
             videoVC?.didCaptureVideo = { [weak self] videoURL in
                 self?.didSelectItems?([YPMediaItem
                     .video(v: YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
@@ -175,6 +183,12 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         }
     
         updateUI()
+
+        if vc == libraryVC {
+            libraryViewDidToggleMultipleSelection(enabled: libraryVC?.multipleSelectionEnabled ?? false)
+        } else {
+            libraryViewDidToggleMultipleSelection(enabled: false)
+        }
     }
     
     func stopCurrentCamera() {
@@ -270,7 +284,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
 
             // Disable Next Button until minNumberOfItems is reached.
             navigationItem.rightBarButtonItem?.isEnabled =
-				libraryVC!.selection.count >= YPConfig.library.minNumberOfItems
+				(libraryVC?.selection.count ?? 0) >= YPConfig.library.minNumberOfItems
 
         case .camera:
             navigationItem.titleView = nil
@@ -303,8 +317,11 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         
         if mode == .library {
             libraryVC.doAfterPermissionCheck { [weak self] in
-                libraryVC.selectedMedia(photoCallback: { photo in
+                libraryVC.selectedMedia(
+                photoCallback: { photo in
                     self?.didSelectItems?([YPMediaItem.photo(p: photo)])
+                }, animatedPhotoCallback: { animatedPhoto in
+                    self?.didSelectItems?([YPMediaItem.animatedPhoto(a: animatedPhoto)])
                 }, videoCallback: { video in
                     self?.didSelectItems?([YPMediaItem
                         .video(v: video)])
@@ -322,8 +339,36 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     }
 }
 
+extension YPPickerVC: YPCameraViewDelegate {
+    public func cameraViewPermissionNotGranted() {
+        let nextPage = currentPage + 1
+        let currentScreen: YPPickerScreen
+        switch mode {
+        case .library:
+            currentScreen = .library
+        case .camera:
+            currentScreen = .photo
+        case .video:
+            currentScreen = .video
+        }
+        if controllers.count > nextPage && YPImagePickerConfiguration.shared.startOnScreen == currentScreen {
+            showPage(nextPage)
+        } else {
+            dismiss(animated: true, completion: nil)
+        }
+    }
+}
+
 extension YPPickerVC: YPLibraryViewDelegate {
-    
+    public func libraryViewPermissionNotGranted() {
+        let nextPage = currentPage + 1
+        if controllers.count > nextPage && YPImagePickerConfiguration.shared.startOnScreen == .library {
+            showPage(nextPage)
+        } else {
+            noPhotosForOptions()
+        }
+    }
+
     public func libraryViewDidTapNext() {
         libraryVC?.isProcessing = true
         DispatchQueue.main.async {
@@ -351,12 +396,11 @@ extension YPPickerVC: YPLibraryViewDelegate {
     }
     
     public func libraryViewDidToggleMultipleSelection(enabled: Bool) {
-        var offset = v.header.frame.height
-        if #available(iOS 11.0, *) {
-            offset += v.safeAreaInsets.bottom
-        }
-        
-        v.header.bottomConstraint?.constant = enabled ? offset : 0
+        let bottomOffset = v.safeAreaInsets.bottom
+        let offset = v.header.frame.height + bottomOffset
+
+        v.header.bottomConstraint?.constant = enabled ? -offset : 0
+        v.bottomView.bottomConstraint?.constant = enabled ? -bottomOffset : 0
         v.layoutIfNeeded()
         updateUI()
     }

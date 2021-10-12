@@ -6,7 +6,9 @@
 //  Copyright © 2018 Yummypets. All rights reserved.
 //
 
+import SDWebImage
 import UIKit
+
 
 public class YPSelectionsGalleryVC: UIViewController, YPSelectionsGalleryCellDelegate {
     
@@ -73,6 +75,9 @@ public class YPSelectionsGalleryVC: UIViewController, YPSelectionsGalleryCellDel
                 v.collectionView.deleteItems(at: [indexPath])
             }, completion: { _ in })
         }
+        if items.isEmpty {
+            self.navigationController?.popViewController(animated: true)
+        }
     }
 }
 
@@ -92,12 +97,20 @@ extension YPSelectionsGalleryVC: UICollectionViewDataSource {
         let item = items[indexPath.row]
         switch item {
         case .photo(let photo):
+            cell.fileTooBigContainerView.isHidden = fitsSizeLimits(fileSize: photo.size, showModal: false)
             cell.imageView.image = photo.image
             cell.setEditable(YPConfig.showsPhotoFilters)
+        case .animatedPhoto(let animatedPhoto):
+            cell.fileTooBigContainerView.isHidden = fitsSizeLimits(fileSize: animatedPhoto.size, showModal: false)
+            cell.imageView.sd_setImage(with: animatedPhoto.url, completed: nil)
+            cell.setEditable(false)
         case .video(let video):
+            cell.fileTooBigContainerView.isHidden = fitsSizeLimits(fileSize: video.size, showModal: false)
             cell.imageView.image = video.thumbnail
             cell.setEditable(YPConfig.showsVideoTrimmer)
         }
+        cell.fileTooBigLabel.text = String(format: YPConfig.wordings.fileTooBigWarning,
+                                           "\((Double(YPConfig.library.sizeLimit ?? 0) / (1024 * 1024)).removeZerosFromEnd())")
         cell.removeButton.isHidden = YPConfig.gallery.hidesRemoveButton
         return cell
     }
@@ -113,6 +126,8 @@ extension YPSelectionsGalleryVC: UICollectionViewDelegate {
             if !YPConfig.filters.isEmpty, YPConfig.showsPhotoFilters {
                 mediaFilterVC = YPPhotoFiltersVC(inputPhoto: photo, isFromSelectionVC: true)
             }
+        case .animatedPhoto:
+            mediaFilterVC = nil
         case .video(let video):
             if YPConfig.showsVideoTrimmer {
                 mediaFilterVC = YPVideoFiltersVC.initWith(video: video, isFromSelectionVC: true)

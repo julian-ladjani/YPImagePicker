@@ -71,6 +71,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 switch item {
                 case .photo(let photo):
                     itemAsset = photo.asset
+                case .animatedPhoto(let animatedPhoto):
+                    itemAsset = animatedPhoto.asset
                 case .video(let video):
                     itemAsset = video.asset
                 }
@@ -234,6 +236,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             if hasPermission && !strongSelf.initialized {
                 strongSelf.initialize()
                 strongSelf.initialized = true
+            } else if !hasPermission {
+                strongSelf.delegate?.libraryViewPermissionNotGranted()
             }
         }
     }
@@ -244,8 +248,17 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         // Only intilialize picker if photo permission is Allowed by user.
         let status = PHPhotoLibrary.authorizationStatus()
         switch status {
-        case .authorized:
-            block(true)
+        case .authorized, .limited:
+            let fetchOptions = PHFetchOptions()
+            if PHAsset.fetchAssets(with: .image, options: fetchOptions).count == .zero {
+                let popup = YPPermissionDeniedPopup()
+                let alert = popup.popup(cancelBlock: {
+                    block(false)
+                })
+                present(alert, animated: true, completion: nil)
+            } else {
+                block(true)
+            }
         case .restricted, .denied:
             let popup = YPPermissionDeniedPopup()
             let alert = popup.popup(cancelBlock: {
@@ -260,7 +273,11 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 }
             }
         @unknown default:
-            fatalError()
+            let popup = YPPermissionDeniedPopup()
+            let alert = popup.popup(cancelBlock: {
+                block(false)
+            })
+            present(alert, animated: true, completion: nil)
         }
     }
     
@@ -319,6 +336,18 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         
         let completion = { (isLowResIntermediaryImage: Bool) in
             self.v.hideOverlayView()
+            self.v.assetZoomableView.canZoom = true
+            self.v.assetViewContainer.refreshSquareCropButton()
+            self.updateCropInfo()
+            if !isLowResIntermediaryImage {
+                self.v.hideLoader()
+                self.delegate?.libraryViewFinishedLoading()
+            }
+        }
+
+        let animatedCompletion = { (isLowResIntermediaryImage: Bool) in
+            self.v.hideOverlayView()
+            self.v.assetZoomableView.canZoom = false
             self.v.assetViewContainer.refreshSquareCropButton()
             self.updateCropInfo()
             if !isLowResIntermediaryImage {
@@ -335,11 +364,20 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         DispatchQueue.global(qos: .userInitiated).async {
             switch asset.mediaType {
             case .image:
-                self.v.assetZoomableView.setImage(asset,
-                                                  mediaManager: self.mediaManager,
-                                                  storedCropPosition: self.fetchStoredCrop(),
-                                                  completion: completion,
-                                                  updateCropInfo: updateCropInfo)
+                if asset.playbackStyle == .imageAnimated {
+
+                    self.v.assetZoomableView.setAnimatedImage(asset,
+                                                              mediaManager: self.mediaManager,
+                                                              storedCropPosition: self.fetchStoredCrop(),
+                                                              completion: animatedCompletion,
+                                                              updateCropInfo: updateCropInfo)
+                } else {
+                    self.v.assetZoomableView.setImage(asset,
+                                                      mediaManager: self.mediaManager,
+                                                      storedCropPosition: self.fetchStoredCrop(),
+                                                      completion: completion,
+                                                      updateCropInfo: updateCropInfo)
+                }
             case .video:
                 self.v.assetZoomableView.setVideo(asset,
                                                   mediaManager: self.mediaManager,
@@ -349,7 +387,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             case .audio, .unknown:
                 ()
             @unknown default:
-                fatalError()
+                ()
             }
         }
     }
@@ -360,9 +398,16 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         guard asset.mediaType == .video else {
             return true
         }
-        
-        let tooLong = floor(asset.duration) > YPConfig.video.libraryTimeLimit
+
+
+        let tooLong: Bool
+        if let libraryTimeLimit = YPConfig.video.libraryTimeLimit {
+            tooLong = floor(asset.duration) > libraryTimeLimit
+        } else {
+            tooLong = false
+        }
         let tooShort = floor(asset.duration) < YPConfig.video.minimumTimeLimit
+
         
         if tooLong || tooShort {
             DispatchQueue.main.async {
@@ -423,6 +468,15 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         let ts = targetSize(for: asset, cropRect: cropRect)
         mediaManager.imageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
     }
+
+    private func fetchAnimatedImageAndCrop(for asset: PHAsset,
+                                   withCropRect: CGRect? = nil,
+                                   callback: @escaping (_ preview: UIImage, _ imageUrl: URL, _ exif: [String: Any]) -> Void) {
+        delegate?.libraryViewDidTapNext()
+        let cropRect = withCropRect ?? DispatchQueue.main.sync { v.currentCropRect() }
+        let ts = targetSize(for: asset, cropRect: cropRect)
+        mediaManager.imageManager?.fetchAnimatedImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
+    }
     
     private func fetchVideoAndApplySettings(for asset: PHAsset,
                                             withCropRect rect: CGRect? = nil,
@@ -435,15 +489,15 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                                     y: yCrop,
                                     width: ts.width,
                                     height: ts.height)
-        
+
         guard fitsVideoLengthLimits(asset: asset) else {
             return
         }
         
-        if YPConfig.video.automaticTrimToTrimmerMaxDuration {
+        if YPConfig.video.automaticTrimToTrimmerMaxDuration && YPConfig.video.trimmerMaxDuration != .zero {
             fetchVideoAndCropWithDuration(for: asset,
                                           withCropRect: resultCropRect,
-                                          duration: YPConfig.video.trimmerMaxDuration,
+                                             duration: YPConfig.video.trimmerMaxDuration,
                                           callback: callback)
         } else {
             delegate?.libraryViewDidTapNext()
@@ -464,13 +518,14 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     }
     
     public func selectedMedia(photoCallback: @escaping (_ photo: YPMediaPhoto) -> Void,
+                              animatedPhotoCallback: @escaping (_ photo: YPMediaAnimatedPhoto) -> Void,
                               videoCallback: @escaping (_ videoURL: YPMediaVideo) -> Void,
                               multipleItemsCallback: @escaping (_ items: [YPMediaItem]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let selectedAssets: [(asset: PHAsset, cropRect: CGRect?)] = self.selection.map {
+            let selectedAssets: [(asset: PHAsset, cropRect: CGRect?)] = self.selection.compactMap {
                 guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier],
-													  options: PHFetchOptions()).firstObject else { fatalError() }
+													  options: PHFetchOptions()).firstObject else { return nil }
                 return (asset, $0.cropRect)
             }
             
@@ -499,13 +554,25 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                     
                     switch asset.asset.mediaType {
                     case .image:
-                        self.fetchImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, exifMeta in
-                            let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(),
-													 exifMeta: exifMeta, asset: asset.asset)
-                            resultMediaItems.append(YPMediaItem.photo(p: photo))
-                            asyncGroup.leave()
+                        if asset.asset.playbackStyle == .imageAnimated {
+                            self.fetchAnimatedImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, url, exifMeta in
+                                let animatedPhoto = YPMediaAnimatedPhoto(
+                                    thumbnail: image.resizedImageIfNeeded(targedImageSize: YPConfig.library.targetImageSize),
+                                    url: url,
+                                    exifMeta: exifMeta,
+                                    asset: asset.asset
+                                )
+                                resultMediaItems.append(YPMediaItem.animatedPhoto(a: animatedPhoto))
+                                asyncGroup.leave()
+                            }
+                        } else {
+                            self.fetchImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, exifMeta in
+                                let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(targedImageSize: YPConfig.library.targetImageSize),
+                                                         exifMeta: exifMeta, asset: asset.asset)
+                                resultMediaItems.append(YPMediaItem.photo(p: photo))
+                                asyncGroup.leave()
+                            }
                         }
-                        
                     case .video:
                         self.fetchVideoAndApplySettings(for: asset.asset,
                                                              withCropRect: asset.cropRect) { videoURL in
@@ -532,6 +599,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                         switch first {
                         case .photo(let photo):
                             firstAsset = photo.asset
+                        case .animatedPhoto(let animatedPhoto):
+                            firstAsset = animatedPhoto.asset
                         case .video(let video):
                             firstAsset = video.asset
                         }
@@ -542,6 +611,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                         switch second {
                         case .photo(let photo):
                             secondAsset = photo.asset
+                        case .animatedPhoto(let animatedPhoto):
+                            secondAsset = animatedPhoto.asset
                         case .video(let video):
                             secondAsset = video.asset
                         }
@@ -574,17 +645,32 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                         }
                     })
                 case .image:
-                    self.fetchImageAndCrop(for: asset) { image, exifMeta in
-                        DispatchQueue.main.async {
-                            self.delegate?.libraryViewFinishedLoading()
-                            let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(),
-                                                     exifMeta: exifMeta,
-                                                     asset: asset)
-                            photoCallback(photo)
+                    if asset.playbackStyle == .imageAnimated {
+                        self.fetchAnimatedImageAndCrop(for: asset) { image, url, exifMeta in
+                            DispatchQueue.main.async {
+                                self.delegate?.libraryViewFinishedLoading()
+                                let animatedPhoto = YPMediaAnimatedPhoto(
+                                    thumbnail: image.resizedImageIfNeeded(targedImageSize: YPConfig.library.targetImageSize),
+                                    url: url,
+                                    exifMeta: exifMeta,
+                                    asset: asset
+                                )
+                                animatedPhotoCallback(animatedPhoto)
+                            }
+                        }
+                    } else {
+                        self.fetchImageAndCrop(for: asset) { image, exifMeta in
+                            DispatchQueue.main.async {
+                                self.delegate?.libraryViewFinishedLoading()
+                                let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(targedImageSize: YPConfig.library.targetImageSize),
+                                                         exifMeta: exifMeta,
+                                                         asset: asset)
+                                photoCallback(photo)
+                            }
                         }
                     }
                 @unknown default:
-                    fatalError()
+                    return
                 }
                 return
             }

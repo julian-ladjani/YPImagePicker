@@ -12,6 +12,8 @@ public struct YPWordings {
     
     public var permissionPopup = PermissionPopup()
     public var videoDurationPopup = VideoDurationPopup()
+    public var librarySeveralSizePopup = LibrarySeveralSizePopup()
+    public var librarySizePopup = LibrarySizePopup()
 
     public struct PermissionPopup {
         public var title = ypLocalized("YPImagePickerPermissionDeniedPopupTitle")
@@ -24,6 +26,16 @@ public struct YPWordings {
         public var title = ypLocalized("YPImagePickerVideoDurationTitle")
         public var tooShortMessage = ypLocalized("YPImagePickerVideoTooShort")
         public var tooLongMessage = ypLocalized("YPImagePickerVideoTooLong")
+    }
+
+    public struct LibrarySizePopup {
+        public var title = ypLocalized("YPImagePickerLibrarySizeTitle")
+        public var tooLongMessage = ypLocalized("YPImagePickerLibrarySizeTooLong")
+    }
+
+    public struct LibrarySeveralSizePopup {
+        public var title = ypLocalized("YPImagePickerLibrarySeveralSizeTitle")
+        public var tooLongMessage = ypLocalized("YPImagePickerLibrarySeveralSizeTooLong")
     }
     
     public var ok = ypLocalized("YPImagePickerOk")
@@ -41,4 +53,5 @@ public struct YPWordings {
     public var filter = ypLocalized("YPImagePickerFilter")
     public var crop = ypLocalized("YPImagePickerCrop")
     public var warningMaxItemsLimit = ypLocalized("YPImagePickerWarningItemsLimit")
+    public var fileTooBigWarning = ypLocalized("YPImagePickerLibrarySizeTooLong")
 }

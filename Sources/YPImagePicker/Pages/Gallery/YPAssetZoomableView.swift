@@ -10,7 +10,7 @@
 import UIKit
 import Photos
 
-protocol YPAssetZoomableViewDelegate: class {
+protocol YPAssetZoomableViewDelegate: AnyObject {
     func ypAssetZoomableViewDidLayoutSubviews(_ zoomableView: YPAssetZoomableView)
     func ypAssetZoomableViewScrollViewDidZoom()
     func ypAssetZoomableViewScrollViewDidEndZooming()
@@ -24,6 +24,17 @@ final class YPAssetZoomableView: UIScrollView {
     public var videoView = YPVideoView()
     public var squaredZoomScale: CGFloat = 1
     public var minWidth: CGFloat? = YPConfig.library.minWidthForItem
+    public var canZoom: Bool = true {
+        didSet {
+            if canZoom {
+                self.maximumZoomScale = 6.0
+                self.isScrollEnabled = true
+            } else {
+                self.maximumZoomScale = 1.0
+                self.isScrollEnabled = false
+            }
+        }
+    }
     
     fileprivate var currentAsset: PHAsset?
     
@@ -133,6 +144,46 @@ final class YPAssetZoomableView: UIScrollView {
             }
             
             completion(isLowResIntermediaryImage)
+        }
+    }
+
+    public func setAnimatedImage(_ animatedPhoto: PHAsset,
+                         mediaManager: LibraryMediaManager,
+                         storedCropPosition: YPLibrarySelection?,
+                         completion: @escaping (Bool) -> Void,
+                         updateCropInfo: @escaping () -> Void) {
+        guard currentAsset != animatedPhoto else {
+            DispatchQueue.main.async { completion(false) }
+            return
+        }
+        currentAsset = animatedPhoto
+
+        mediaManager.imageManager?.fetch(animatedPhoto: animatedPhoto) { [weak self] image, url in
+            guard let strongSelf = self else { return }
+
+            if strongSelf.photoImageView.isDescendant(of: strongSelf) == false {
+                strongSelf.isVideoMode = false
+                strongSelf.videoView.removeFromSuperview()
+                strongSelf.videoView.showPlayImage(show: false)
+                strongSelf.videoView.deallocate()
+                strongSelf.addSubview(strongSelf.photoImageView)
+
+                strongSelf.photoImageView.contentMode = .scaleAspectFill
+                strongSelf.photoImageView.clipsToBounds = true
+            }
+
+            strongSelf.photoImageView.sd_setImage(with: url, placeholderImage: image)
+
+            strongSelf.setAssetFrame(for: strongSelf.photoImageView, with: image)
+
+            // Stored crop position in multiple selection
+            if let scp173 = storedCropPosition {
+                strongSelf.applyStoredCropPosition(scp173)
+                // add update CropInfo after multiple
+                updateCropInfo()
+            }
+
+            completion(false)
         }
     }
     

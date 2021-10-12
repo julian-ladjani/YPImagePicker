@@ -11,7 +11,7 @@ import UIKit
 public class YPVideoCaptureVC: UIViewController, YPPermissionCheckable {
     
     public var didCaptureVideo: ((URL) -> Void)?
-    
+    weak var delegate: YPCameraViewDelegate?
     private let videoHelper = YPVideoCaptureHelper()
     private let v = YPCameraView(overlayView: nil)
     private var viewState = ViewState()
@@ -56,8 +56,12 @@ public class YPVideoCaptureVC: UIViewController, YPPermissionCheckable {
 
     func start() {
         v.shotButton.isEnabled = false
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
             guard let strongSelf = self else {
+                return
+            }
+            if !hasPermission {
+                strongSelf.delegate?.cameraViewPermissionNotGranted()
                 return
             }
             self?.videoHelper.start(previewView: strongSelf.v.previewViewContainer,
@@ -97,7 +101,11 @@ public class YPVideoCaptureVC: UIViewController, YPPermissionCheckable {
     
     @objc
     func flipButtonTapped() {
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
+            if !hasPermission {
+                self?.delegate?.cameraViewPermissionNotGranted()
+                return
+            }
             self?.flip()
         }
     }
@@ -124,7 +132,11 @@ public class YPVideoCaptureVC: UIViewController, YPPermissionCheckable {
     
     @objc
     func shotButtonTapped() {
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
+            if !hasPermission {
+                self?.delegate?.cameraViewPermissionNotGranted()
+                return
+            }
             self?.toggleRecording()
         }
     }
@@ -155,7 +167,11 @@ public class YPVideoCaptureVC: UIViewController, YPPermissionCheckable {
     
     @objc
     func focusTapped(_ recognizer: UITapGestureRecognizer) {
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
+            if !hasPermission {
+                self?.delegate?.cameraViewPermissionNotGranted()
+                return
+            }
             self?.focus(recognizer: recognizer)
         }
     }
@@ -175,7 +191,11 @@ public class YPVideoCaptureVC: UIViewController, YPPermissionCheckable {
     
     @objc
     func pinch(_ recognizer: UIPinchGestureRecognizer) {
-        doAfterPermissionCheck { [weak self] in
+        doAfterPermissionCheck { [weak self] hasPermission in
+            if !hasPermission {
+                self?.delegate?.cameraViewPermissionNotGranted()
+                return
+            }
             self?.zoom(recognizer: recognizer)
         }
     }
@@ -243,7 +263,7 @@ public class YPVideoCaptureVC: UIViewController, YPPermissionCheckable {
             case .on: return .on
             case .auto: return .auto
             @unknown default:
-                fatalError()
+                return .auto
             }
         } else {
             return .noFlash

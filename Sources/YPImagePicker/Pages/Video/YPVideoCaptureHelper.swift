@@ -23,7 +23,7 @@ class YPVideoCaptureHelper: NSObject {
     private let sessionQueue = DispatchQueue(label: "YPVideoVCSerialQueue")
     private var videoInput: AVCaptureDeviceInput?
     private var videoOutput = AVCaptureMovieFileOutput()
-    private var videoRecordingTimeLimit: TimeInterval = 0
+    private var videoRecordingTimeLimit: TimeInterval? = nil
     private var isCaptureSessionSetup: Bool = false
     private var isPreviewSetup = false
     private var previewView: UIView!
@@ -32,7 +32,7 @@ class YPVideoCaptureHelper: NSObject {
     
     // MARK: - Init
     
-    public func start(previewView: UIView, withVideoRecordingLimit: TimeInterval, completion: @escaping () -> Void) {
+    public func start(previewView: UIView, withVideoRecordingLimit: TimeInterval?, completion: @escaping () -> Void) {
         self.previewView = previewView
         self.videoRecordingTimeLimit = withVideoRecordingLimit
         sessionQueue.async { [weak self] in
@@ -64,7 +64,7 @@ class YPVideoCaptureHelper: NSObject {
                     completion()
                     self?.tryToSetupPreview()
                 @unknown default:
-                    fatalError()
+                    self?.session.stopRunning()
                 }
             }
         }
@@ -91,10 +91,15 @@ class YPVideoCaptureHelper: NSObject {
             }
             
             // Re Add audio recording
-            for device in AVCaptureDevice.devices(for: .audio) {
+            let deviceDescoverySession = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInMicrophone],
+                mediaType: .audio,
+                position: .unspecified
+            )
+            deviceDescoverySession.devices.forEach { [weak self] device in
                 if let audioInput = try? AVCaptureDeviceInput(device: device) {
-                    if strongSelf.session.canAddInput(audioInput) {
-                        strongSelf.session.addInput(audioInput)
+                    if self?.session.canAddInput(audioInput) ?? false {
+                        self?.session.addInput(audioInput)
                     }
                 }
             }
@@ -215,17 +220,33 @@ class YPVideoCaptureHelper: NSObject {
             }
             
             // Add audio recording
-            for device in AVCaptureDevice.devices(for: .audio) {
+            let deviceDescoverySession = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInMicrophone],
+                mediaType: .audio,
+                position: .unspecified
+            )
+            deviceDescoverySession.devices.forEach { [weak self] device in
+                if let audioInput = try? AVCaptureDeviceInput(device: device) {
+                    if self?.session.canAddInput(audioInput) ?? false {
+                        self?.session.addInput(audioInput)
+                    }
+                }
+            }
+            /* for device in AVCaptureDevice.devices(for: .audio) {
                 if let audioInput = try? AVCaptureDeviceInput(device: device) {
                     if session.canAddInput(audioInput) {
                         session.addInput(audioInput)
                     }
                 }
-            }
+            }*/
             
             let timeScale: Int32 = 30 // FPS
-            let maxDuration =
-                CMTimeMakeWithSeconds(self.videoRecordingTimeLimit, preferredTimescale: timeScale)
+            let maxDuration: CMTime
+            if let videoRecordingTimeLimit = self.videoRecordingTimeLimit, videoRecordingTimeLimit > 0 {
+                maxDuration = CMTimeMakeWithSeconds(videoRecordingTimeLimit, preferredTimescale: timeScale)
+            } else {
+                maxDuration = .invalid
+            }
             videoOutput.maxRecordedDuration = maxDuration
             videoOutput.minFreeDiskSpaceLimit = 1024 * 1024
             if YPConfig.video.fileType == .mp4 {
@@ -245,9 +266,14 @@ class YPVideoCaptureHelper: NSObject {
     @objc
     func tick() {
         let timeElapsed = Date().timeIntervalSince(dateVideoStarted)
-        let progress: Float = Float(timeElapsed) / Float(videoRecordingTimeLimit)
+        let timeProgress: Float
+        if let videoRecordingTimeLimit = videoRecordingTimeLimit, videoRecordingTimeLimit > 0 {
+            timeProgress = Float(timeElapsed) / Float(videoRecordingTimeLimit)
+        } else {
+            timeProgress = .zero
+        }
         DispatchQueue.main.async {
-            self.videoRecordingProgress?(progress, timeElapsed)
+            self.videoRecordingProgress?(timeProgress, timeElapsed)
         }
     }
     

@@ -6,10 +6,10 @@
 //  Copyright © 2018 Yummypets. All rights reserved.
 //
 
+import CoreGraphics
 import UIKit
 import AVFoundation
 
-@available(iOS 10.0, *)
 class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDelegate {
 
     let sessionQueue = DispatchQueue(label: "YPCameraVCSerialQueue", qos: .background)
@@ -33,16 +33,10 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
     // MARK: - Configuration
     
     private func newSettings() -> AVCapturePhotoSettings {
-        var settings = AVCapturePhotoSettings()
-        
-        // Catpure Heif when available.
-        if photoOutput.availablePhotoCodecTypes.contains(.hevc) {
-            settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc])
-        }
-        
-        // Catpure Highest Quality possible.
+        let settings = AVCapturePhotoSettings()
         settings.isHighResolutionPhotoEnabled = true
-        
+        settings.isAutoStillImageStabilizationEnabled = photoOutput.isStillImageStabilizationSupported
+
         // Set flash mode.
         if let deviceInput = deviceInput {
             if deviceInput.device.isFlashAvailable {
@@ -98,23 +92,76 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
 
-    @available(iOS 11.0, *)
+    var captureOutputPhotoRect: CGRect {
+        return videoLayer.metadataOutputRectConverted(fromLayerRect: videoLayer.bounds)
+    }
+
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-        guard let data = photo.fileDataRepresentation() else { return }
+        guard let rawData = photo.fileDataRepresentation(),
+              let data = try? crop(photoData: rawData, toOutputRect: captureOutputPhotoRect)
+        else { return }
+
         block?(data)
     }
-        
-    func photoOutput(_ output: AVCapturePhotoOutput,
-                     didFinishProcessingPhoto photoSampleBuffer: CMSampleBuffer?,
-                     previewPhoto previewPhotoSampleBuffer: CMSampleBuffer?,
-                     resolvedSettings: AVCaptureResolvedPhotoSettings,
-                     bracketSettings: AVCaptureBracketedStillImageSettings?,
-                     error: Error?) {
-        guard let buffer = photoSampleBuffer else { return }
-        if let data = AVCapturePhotoOutput
-            .jpegPhotoDataRepresentation(forJPEGSampleBuffer: buffer,
-                                         previewPhotoSampleBuffer: previewPhotoSampleBuffer) {
-            block?(data)
+
+    private func crop(photoData: Data, toOutputRect outputRect: CGRect) throws -> Data {
+        guard let originalImage = UIImage(data: photoData) else {
+            throw YPPhotoError("Fail generate image")
         }
+
+        guard outputRect.width > 0, outputRect.height > 0 else {
+            throw YPPhotoError("Image is 0 sized")
+        }
+        guard var cgImage = originalImage.cgImage else {
+            throw YPPhotoError("Fail to get cgImage")
+        }
+        let width = CGFloat(cgImage.width)
+        let height = CGFloat(cgImage.height)
+        let cropRect = CGRect(x: outputRect.origin.x * width,
+                              y: outputRect.origin.y * height,
+                              width: outputRect.size.width * width,
+                              height: outputRect.size.height * height)
+
+        if let newCgImage = cgImage.cropping(to: cropRect) {
+            cgImage = newCgImage
+        } else {
+            throw YPPhotoError("Fail crop cgImage")
+        }
+        let croppedUIImage = UIImage(cgImage: cgImage, scale: 1.0, orientation: originalImage.imageOrientation)
+        let compressionQuality = YPConfig.photo.targetImageCompression
+        guard let croppedData = croppedUIImage.heicData(compressionQuality: compressionQuality) ?? croppedUIImage.jpegData(compressionQuality: compressionQuality) else {
+            throw YPPhotoError("cropped data is nil")
+        }
+        return croppedData
+    }
+}
+
+extension UIImage {
+
+    func heicData(compressionQuality: CGFloat) -> Data? {
+        let data = NSMutableData()
+        guard let imageDestination =
+                CGImageDestinationCreateWithData(
+                    data, AVFileType.heic as CFString, 1, nil
+                )
+        else {
+            return nil
+        }
+
+        guard let cgImage = self.cgImage else {
+            return nil
+        }
+
+        let options: NSDictionary = [
+            kCGImageDestinationLossyCompressionQuality: compressionQuality,
+            kCGImagePropertyOrientation: self.imageOrientation
+        ]
+
+        CGImageDestinationAddImage(imageDestination, cgImage, options)
+        guard CGImageDestinationFinalize(imageDestination) else {
+            return nil
+        }
+
+        return data as Data
     }
 }

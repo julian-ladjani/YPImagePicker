@@ -65,7 +65,7 @@ extension YPPhotoCapture {
                     completion()
                     self?.tryToSetupPreview()
                 @unknown default:
-                    fatalError()
+                    self?.session.stopRunning()
                 }
             }
         }
@@ -100,7 +100,10 @@ extension YPPhotoCapture {
     // MARK: - Focus
     
     func focus(on point: CGPoint) {
-        setFocusPointOnDevice(device: device!, point: point)
+        guard let device = device else {
+            return
+        }
+        setFocusPointOnDevice(device: device, point: point)
     }
     
     // MARK: - Zoom

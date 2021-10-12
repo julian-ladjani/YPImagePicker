@@ -34,6 +34,8 @@ public struct YPImagePickerConfiguration {
     
     // Library configuration
     public var library = YPConfigLibrary()
+
+    public var photo = YPConfigPhoto()
     
     // Video configuration
     public var video = YPConfigVideo()
@@ -83,11 +85,7 @@ public struct YPImagePickerConfiguration {
 
     /// Adds a Crop step in the photo taking process, after filters.  Defaults to .none
     public var showsCrop: YPCropType = .none
-    
-    /// Ex: cappedTo:1024 will make sure images from the library or the camera will be
-    /// resized to fit in a 1024x1024 box. Defaults to original image size.
-    public var targetImageSize = YPImageSize.original
-    
+
     /// Adds a Overlay View to the camera
     public var overlayView: UIView?
 
@@ -180,6 +178,7 @@ public struct YPImagePickerConfiguration {
 public struct YPConfigLibrary {
     
     public var options: PHFetchOptions?
+    public var sizeLimit: Int64? = nil
 
     /// Set this to true if you want to force the library output to be a squared image. Defaults to false.
     public var onlySquare = false
@@ -220,6 +219,8 @@ public struct YPConfigLibrary {
     
     /// Set the overlay type shown on top of the selected library item
     public var itemOverlayType: YPItemOverlayType = .grid
+
+    public var targetImageSize = YPImageSize.original
 }
 
 /// Encapsulates video specific settings.
@@ -244,11 +245,11 @@ public struct YPConfigVideo {
     
     /// Defines the time limit for recording videos.
     /// Default is 60 seconds.
-    public var recordingTimeLimit: TimeInterval = 60.0
+    public var recordingTimeLimit: TimeInterval? = 60.0
     
     /// Defines the time limit for videos from the library.
     /// Defaults to 60 seconds.
-    public var libraryTimeLimit: TimeInterval = 60.0
+    public var libraryTimeLimit: TimeInterval? = 60.0
     
     /// Defines the minimum time for the video
     /// Defaults to 3 seconds.
@@ -274,7 +275,12 @@ public struct YPConfigVideo {
 /// Encapsulates gallery specific settings.
 public struct YPConfigSelectionsGallery {
     /// Defines if the remove button should be hidden when showing the gallery. Default is true.
-    public var hidesRemoveButton = true
+    public var hidesRemoveButton = false
+}
+
+public struct YPConfigPhoto {
+    public var targetImageSize = YPImageSize.original
+    public var targetImageCompression: CGFloat = 1.0
 }
 
 public enum YPItemOverlayType {

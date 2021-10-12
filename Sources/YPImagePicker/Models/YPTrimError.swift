@@ -17,3 +17,14 @@ struct YPTrimError: Error {
         self.underlyingError = underlyingError
     }
 }
+
+
+struct YPPhotoError: Error {
+    let description: String
+    let underlyingError: Error?
+
+    init(_ description: String, underlyingError: Error? = nil) {
+        self.description = "CapturePhoto: " + description
+        self.underlyingError = underlyingError
+    }
+}

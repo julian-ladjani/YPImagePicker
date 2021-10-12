@@ -115,7 +115,7 @@ class YPAssetViewContainer: UIView {
         } else {
             if let image = zoomableView?.assetImageView.image {
                 let isImageASquare = image.size.width == image.size.height
-                squareCropButton.isHidden = isImageASquare
+                squareCropButton.isHidden = isImageASquare || !(zoomableView?.canZoom ?? true)
             }
         }
         

@@ -19,11 +19,9 @@ extension YPPermissionCheckable where Self: UIViewController {
         checkPermissionToAccessVideo { _ in }
     }
     
-    func doAfterPermissionCheck(block:@escaping () -> Void) {
+    func doAfterPermissionCheck(block:@escaping (Bool) -> Void) {
         checkPermissionToAccessVideo { hasPermission in
-            if hasPermission {
-                block()
-            }
+            block(hasPermission)
         }
     }
     
@@ -46,7 +44,11 @@ extension YPPermissionCheckable where Self: UIViewController {
                 }
             })
         @unknown default:
-            fatalError()
+            let popup = YPPermissionDeniedPopup()
+            let alert = popup.popup(cancelBlock: {
+                block(false)
+            })
+            present(alert, animated: true, completion: nil)
         }
     }
 }
