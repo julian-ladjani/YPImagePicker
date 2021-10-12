@@ -126,7 +126,7 @@ extension YPSelectionsGalleryVC: UICollectionViewDelegate {
             if !YPConfig.filters.isEmpty, YPConfig.showsPhotoFilters {
                 mediaFilterVC = YPPhotoFiltersVC(inputPhoto: photo, isFromSelectionVC: true)
             }
-        case .animatedPhoto(let animatedPhoto):
+        case .animatedPhoto:
             mediaFilterVC = nil
         case .video(let video):
             if YPConfig.showsVideoTrimmer {

@@ -9,7 +9,7 @@
 import Foundation
 
 @objc
-public protocol YPLibraryViewDelegate: class {
+public protocol YPLibraryViewDelegate: AnyObject {
     func libraryViewDidTapNext()
     func libraryViewStartedLoadingImage()
     func libraryViewFinishedLoading()

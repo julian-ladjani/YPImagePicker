@@ -44,7 +44,11 @@ extension YPPermissionCheckable where Self: UIViewController {
                 }
             })
         @unknown default:
-            fatalError()
+            let popup = YPPermissionDeniedPopup()
+            let alert = popup.popup(cancelBlock: {
+                block(false)
+            })
+            present(alert, animated: true, completion: nil)
         }
     }
 }

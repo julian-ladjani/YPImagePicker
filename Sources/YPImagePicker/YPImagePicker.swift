@@ -81,7 +81,6 @@ open class YPImagePicker: UINavigationController {
             if items.count > 1 {
                 if YPConfig.library.skipSelectionsGallery {
                     self?.didSelect(items: items)
-                    return
                 } else {
                     let selectionsGalleryVC = YPSelectionsGalleryVC(items: items) { _, items in
                         if items.allSatisfy({ item in
@@ -97,12 +96,15 @@ open class YPImagePicker: UINavigationController {
                         }
                     }
                     self?.pushViewController(selectionsGalleryVC, animated: true)
-                    return
                 }
+                return
             }
 
             // One item flow
-            let item = items.first!
+            guard let item = items.first else {
+                self?.didSelect(items: [])
+                return
+            }
             switch item {
             case .photo(let photo):
                 let completion = { (photo: YPMediaPhoto) in

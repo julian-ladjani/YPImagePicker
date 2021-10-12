@@ -10,7 +10,7 @@ import Foundation
 import AVFoundation
 import UIKit
 
-protocol YPPhotoCapture: class {
+protocol YPPhotoCapture: AnyObject {
     
     // Public api
     func start(with previewView: UIView, completion: @escaping () -> Void)
@@ -38,11 +38,7 @@ protocol YPPhotoCapture: class {
 }
 
 func newPhotoCapture() -> YPPhotoCapture {
-    if #available(iOS 10.0, *) {
-        return PostiOS10PhotoCapture()
-    } else {
-        return PreiOS10PhotoCapture()
-    }
+    return PostiOS10PhotoCapture()
 }
 
 enum YPFlashMode {

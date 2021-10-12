@@ -10,7 +10,6 @@ import CoreGraphics
 import UIKit
 import AVFoundation
 
-@available(iOS 10.0, *)
 class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDelegate {
 
     let sessionQueue = DispatchQueue(label: "YPCameraVCSerialQueue", qos: .background)
@@ -97,7 +96,6 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
         return videoLayer.metadataOutputRectConverted(fromLayerRect: videoLayer.bounds)
     }
 
-    @available(iOS 11.0, *)
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let rawData = photo.fileDataRepresentation(),
               let data = try? crop(photoData: rawData, toOutputRect: captureOutputPhotoRect)
@@ -114,8 +112,9 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
         guard outputRect.width > 0, outputRect.height > 0 else {
             throw YPPhotoError("Image is 0 sized")
         }
-
-        var cgImage = originalImage.cgImage!
+        guard var cgImage = originalImage.cgImage else {
+            throw YPPhotoError("Fail to get cgImage")
+        }
         let width = CGFloat(cgImage.width)
         let height = CGFloat(cgImage.height)
         let cropRect = CGRect(x: outputRect.origin.x * width,
@@ -123,7 +122,11 @@ class PostiOS10PhotoCapture: NSObject, YPPhotoCapture, AVCapturePhotoCaptureDele
                               width: outputRect.size.width * width,
                               height: outputRect.size.height * height)
 
-        cgImage = cgImage.cropping(to: cropRect)!
+        if let newCgImage = cgImage.cropping(to: cropRect) {
+            cgImage = newCgImage
+        } else {
+            throw YPPhotoError("Fail crop cgImage")
+        }
         let croppedUIImage = UIImage(cgImage: cgImage, scale: 1.0, orientation: originalImage.imageOrientation)
         let compressionQuality = YPConfig.photo.targetImageCompression
         guard let croppedData = croppedUIImage.heicData(compressionQuality: compressionQuality) ?? croppedUIImage.jpegData(compressionQuality: compressionQuality) else {

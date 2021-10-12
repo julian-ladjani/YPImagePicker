@@ -273,7 +273,11 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 }
             }
         @unknown default:
-            fatalError()
+            let popup = YPPermissionDeniedPopup()
+            let alert = popup.popup(cancelBlock: {
+                block(false)
+            })
+            present(alert, animated: true, completion: nil)
         }
     }
     
@@ -383,7 +387,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             case .audio, .unknown:
                 ()
             @unknown default:
-                fatalError()
+                ()
             }
         }
     }
@@ -519,9 +523,9 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                               multipleItemsCallback: @escaping (_ items: [YPMediaItem]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let selectedAssets: [(asset: PHAsset, cropRect: CGRect?)] = self.selection.map {
+            let selectedAssets: [(asset: PHAsset, cropRect: CGRect?)] = self.selection.compactMap {
                 guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier],
-													  options: PHFetchOptions()).firstObject else { fatalError() }
+													  options: PHFetchOptions()).firstObject else { return nil }
                 return (asset, $0.cropRect)
             }
             
@@ -666,7 +670,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                         }
                     }
                 @unknown default:
-                    fatalError()
+                    return
                 }
                 return
             }

@@ -64,7 +64,7 @@ class YPVideoCaptureHelper: NSObject {
                     completion()
                     self?.tryToSetupPreview()
                 @unknown default:
-                    fatalError()
+                    self?.session.stopRunning()
                 }
             }
         }
@@ -91,10 +91,15 @@ class YPVideoCaptureHelper: NSObject {
             }
             
             // Re Add audio recording
-            for device in AVCaptureDevice.devices(for: .audio) {
+            let deviceDescoverySession = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInMicrophone],
+                mediaType: .audio,
+                position: .unspecified
+            )
+            deviceDescoverySession.devices.forEach { [weak self] device in
                 if let audioInput = try? AVCaptureDeviceInput(device: device) {
-                    if strongSelf.session.canAddInput(audioInput) {
-                        strongSelf.session.addInput(audioInput)
+                    if self?.session.canAddInput(audioInput) ?? false {
+                        self?.session.addInput(audioInput)
                     }
                 }
             }
@@ -215,13 +220,25 @@ class YPVideoCaptureHelper: NSObject {
             }
             
             // Add audio recording
-            for device in AVCaptureDevice.devices(for: .audio) {
+            let deviceDescoverySession = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInMicrophone],
+                mediaType: .audio,
+                position: .unspecified
+            )
+            deviceDescoverySession.devices.forEach { [weak self] device in
+                if let audioInput = try? AVCaptureDeviceInput(device: device) {
+                    if self?.session.canAddInput(audioInput) ?? false {
+                        self?.session.addInput(audioInput)
+                    }
+                }
+            }
+            /* for device in AVCaptureDevice.devices(for: .audio) {
                 if let audioInput = try? AVCaptureDeviceInput(device: device) {
                     if session.canAddInput(audioInput) {
                         session.addInput(audioInput)
                     }
                 }
-            }
+            }*/
             
             let timeScale: Int32 = 30 // FPS
             let maxDuration: CMTime

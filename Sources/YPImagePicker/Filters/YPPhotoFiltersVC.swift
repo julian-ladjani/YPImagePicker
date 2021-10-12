@@ -8,7 +8,7 @@
 
 import UIKit
 
-protocol IsMediaFilterVC: class {
+protocol IsMediaFilterVC: AnyObject {
     var didSave: ((YPMediaItem) -> Void)? { get set }
     var didCancel: (() -> Void)? { get set }
 }
@@ -134,7 +134,11 @@ open class YPPhotoFiltersVC: UIViewController, IsMediaFilterVC, UIGestureRecogni
         img.draw(in: CGRect(x: 0, y: 0, width: thumbnailSize.width, height: thumbnailSize.height))
         let smallImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        return smallImage!.toCIImage()!
+        if let ciImage = smallImage?.toCIImage() {
+            return ciImage
+        } else {
+            return CIImage(color: CIColor(color: .black))
+        }
     }
     
     // MARK: - Actions 🥂

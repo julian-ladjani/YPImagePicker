@@ -8,7 +8,7 @@
 import Foundation
 
 @objc
-public protocol YPCameraViewDelegate: class {
+public protocol YPCameraViewDelegate: AnyObject {
     func cameraViewPermissionNotGranted()
 }
 
