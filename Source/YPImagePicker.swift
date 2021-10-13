@@ -275,3 +275,14 @@ extension Double {
         return String(formatter.string(from: number) ?? "")
     }
 }
+
+extension UINavigationController {
+    func setupNavigationBar() {
+        if #available(iOS 15, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            navigationBar.scrollEdgeAppearance = appearance
+            navigationBar.standardAppearance = appearance
+        }
+    }
+}

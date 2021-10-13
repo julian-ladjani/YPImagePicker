@@ -109,7 +109,7 @@ extension YPSelectionsGalleryVC: UICollectionViewDataSource {
             cell.setEditable(YPConfig.showsVideoTrimmer)
         }
         cell.fileTooBigLabel.text = String(format: YPConfig.wordings.fileTooBigWarning,
-                                           "\((Double(YPConfig.library.sizeLimit ?? 0) / (1024 * 1024)).removeZerosFromEnd())")
+                                           "\((Double(YPConfig.sizeLimit ?? 0) / (1024 * 1024)).removeZerosFromEnd())")
         cell.removeButton.isHidden = YPConfig.gallery.hidesRemoveButton
         return cell
     }
@@ -143,7 +143,9 @@ extension YPSelectionsGalleryVC: UICollectionViewDelegate {
         }
         if let mediaFilterVC = mediaFilterVC as? UIViewController {
             let navVC = UINavigationController(rootViewController: mediaFilterVC)
+            
             navVC.navigationBar.isTranslucent = false
+            navVC.setupNavigationBar()
             present(navVC, animated: true, completion: nil)
         }
     }

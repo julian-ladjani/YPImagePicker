@@ -47,7 +47,7 @@ struct YPAlert {
 
     static func sizeTooLongAlert(_ sourceView: UIView) -> UIAlertController {
         let msg = String(format: YPConfig.wordings.librarySizePopup.tooLongMessage,
-                         "\((Double(YPConfig.library.sizeLimit ?? 0) / (1024.0 * 1024.0)).removeZerosFromEnd())")
+                         "\((Double(YPConfig.sizeLimit ?? 0) / (1024.0 * 1024.0)).removeZerosFromEnd())")
         let alert = UIAlertController(title: YPConfig.wordings.librarySizePopup.title,
                                       message: msg,
                                       preferredStyle: .actionSheet)
@@ -65,7 +65,7 @@ struct YPAlert {
 
     static func severalSizeTooLongAlert(_ sourceView: UIView) -> UIAlertController {
         let msg = String(format: YPConfig.wordings.librarySizePopup.tooLongMessageSeveral,
-                         "\((Double(YPConfig.library.sizeLimit ?? 0) / (1024.0 * 1024.0)).removeZerosFromEnd())")
+                         "\((Double(YPConfig.sizeLimit ?? 0) / (1024.0 * 1024.0)).removeZerosFromEnd())")
         let alert = UIAlertController(title: YPConfig.wordings.librarySizePopup.titleSeveral,
                                       message: msg,
                                       preferredStyle: .actionSheet)

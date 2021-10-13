@@ -47,12 +47,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     open override func viewDidLoad() {
         super.viewDidLoad()
 
-        if #available(iOS 15, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            navigationController?.navigationBar.scrollEdgeAppearance = appearance
-            navigationController?.navigationBar.standardAppearance = appearance
-        }
+        navigationController?.setupNavigationBar()
 
         view.backgroundColor = YPConfig.colors.safeAreaBackgroundColor
         
@@ -235,7 +230,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         }
         
         if YPConfig.library.options != nil {
-            titleView.sv(
+            titleView.subviews(
                 label
             )
             |-(>=8)-label.centerHorizontally()-(>=8)-|
@@ -256,7 +251,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             button.addTarget(self, action: #selector(navBarTapped), for: .touchUpInside)
             button.setBackgroundColor(UIColor.white.withAlphaComponent(0.5), forState: .highlighted)
             
-            titleView.sv(
+            titleView.subviews(
                 label,
                 arrow,
                 button
@@ -291,7 +286,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
 
             // Disable Next Button until minNumberOfItems is reached.
             navigationItem.rightBarButtonItem?.isEnabled =
-                (libraryVC?.selection.count ?? 0) >= YPConfig.library.minNumberOfItems
+                (libraryVC?.selectedItems.count ?? 0) >= YPConfig.library.minNumberOfItems
 
         case .camera:
             navigationItem.titleView = nil

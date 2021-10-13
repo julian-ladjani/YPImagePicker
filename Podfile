@@ -7,5 +7,6 @@ target 'Example' do
   # Pods for YPImagePickerExample
   pod 'SteviaLayout', '= 4.7.3'
   pod 'PryntTrimmerView', '= 4.0.2'
+  pod 'SDWebImage', '= 5.11.1'
 
 end
