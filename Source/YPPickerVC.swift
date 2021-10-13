@@ -178,6 +178,12 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         }
 
         updateUI()
+
+        if vc == libraryVC {
+            libraryViewDidToggleMultipleSelection(enabled: libraryVC?.multipleSelectionEnabled ?? false)
+        } else {
+            libraryViewDidToggleMultipleSelection(enabled: false)
+        }
     }
     
     func stopCurrentCamera() {

@@ -118,7 +118,10 @@ open class YPImagePicker: UINavigationController {
             }
             
             // One item flow
-            let item = items.first!
+            guard let item = items.first else {
+                self?.didSelect(items: [])
+                return
+            }
             switch item {
             case .photo(let photo):
                 let completion = { (photo: YPMediaPhoto) in
