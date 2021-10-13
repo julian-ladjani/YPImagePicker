@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 internal extension UIImage {
     
@@ -54,21 +55,25 @@ internal extension UIImage {
         default:
             ()
         }
-        
+
+        guard let cgImage = cgImage, let space = cgImage.colorSpace else {
+            return self
+        }
+
         // Draw a new image with the calculated transform
         let context = CGContext(data: nil,
                                 width: Int(size.width),
                                 height: Int(size.height),
-                                bitsPerComponent: cgImage!.bitsPerComponent,
+                                bitsPerComponent: cgImage.bitsPerComponent,
                                 bytesPerRow: 0,
-                                space: cgImage!.colorSpace!,
-                                bitmapInfo: cgImage!.bitmapInfo.rawValue)
+                                space: space,
+                                bitmapInfo: cgImage.bitmapInfo.rawValue)
         context?.concatenate(transform)
         switch imageOrientation {
         case .left, .leftMirrored, .right, .rightMirrored:
-            context?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: size.height, height: size.width))
+            context?.draw(cgImage, in: CGRect(x: 0, y: 0, width: size.height, height: size.width))
         default:
-            context?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+            context?.draw(cgImage, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
         }
         
         if let newImageRef =  context?.makeImage() {
@@ -81,8 +86,8 @@ internal extension UIImage {
     }
     
     // Reduce image size further if needed targetImageSize is capped.
-    func resizedImageIfNeeded() -> UIImage {
-        if case let YPImageSize.cappedTo(size: capped) = YPConfig.targetImageSize {
+    func resizedImageIfNeeded(targedImageSize: YPImageSize = .original) -> UIImage {
+        if case let YPImageSize.cappedTo(size: capped) = targedImageSize {
             let size = cappedSize(for: self.size, cappedAt: capped)
             if let resizedImage = self.resized(to: size) {
                 return resizedImage
@@ -114,5 +119,32 @@ internal extension UIImage {
     
     func toCIImage() -> CIImage? {
         return self.ciImage ?? CIImage(cgImage: self.cgImage!)
+    }
+
+    func heicData(compressionQuality: CGFloat) -> Data? {
+        let data = NSMutableData()
+        guard let imageDestination =
+                CGImageDestinationCreateWithData(
+                    data, AVFileType.heic as CFString, 1, nil
+                )
+        else {
+            return nil
+        }
+
+        guard let cgImage = self.cgImage else {
+            return nil
+        }
+
+        let options: NSDictionary = [
+            kCGImageDestinationLossyCompressionQuality: compressionQuality,
+            kCGImagePropertyOrientation: self.imageOrientation
+        ]
+
+        CGImageDestinationAddImage(imageDestination, cgImage, options)
+        guard CGImageDestinationFinalize(imageDestination) else {
+            return nil
+        }
+
+        return data as Data
     }
 }

@@ -86,11 +86,31 @@ open class YPImagePicker: UINavigationController {
             // Multiple items flow
             if items.count > 1 {
                 if YPConfig.library.skipSelectionsGallery {
-                    self?.didSelect(items: items)
+                    if items.allSatisfy({ item in
+                        self?.fitsSizeLimits(fileSize: item.size, showModal: false) ?? false
+                    }) {
+                        self?.didSelect(items: items)
+                    } else {
+                        DispatchQueue.main.async {
+                            guard let self = self else { return }
+                            let alert = YPAlert.severalSizeTooLongAlert(self.view)
+                            self.present(alert, animated: true, completion: nil)
+                        }
+                    }
                     return
                 } else {
                     let selectionsGalleryVC = YPSelectionsGalleryVC(items: items) { _, items in
-                        self?.didSelect(items: items)
+                        if items.allSatisfy({ item in
+                            self?.fitsSizeLimits(fileSize: item.size, showModal: false) ?? false
+                        }) {
+                            self?.didSelect(items: items)
+                        }else {
+                            DispatchQueue.main.async {
+                                guard let self = self else { return }
+                                let alert = YPAlert.severalSizeTooLongAlert(self.view)
+                                self.present(alert, animated: true, completion: nil)
+                            }
+                        }
                     }
                     self?.pushViewController(selectionsGalleryVC, animated: true)
                     return
@@ -110,7 +130,9 @@ open class YPImagePicker: UINavigationController {
                             YPPhotoSaver.trySaveImage(photo.image, inAlbumNamed: YPConfig.albumName)
                         }
                     }
-                    self?.didSelect(items: [mediaItem])
+                    if self?.fitsSizeLimits(fileSize: photo.size) ?? false {
+                        self?.didSelect(items: [mediaItem])
+                    }
                 }
                 
                 func showCropVC(photo: YPMediaPhoto, completion: @escaping (_ aphoto: YPMediaPhoto) -> Void) {
@@ -140,12 +162,28 @@ open class YPImagePicker: UINavigationController {
                 } else {
                     showCropVC(photo: photo, completion: completion)
                 }
+            case .animatedPhoto(let animatedPhoto):
+                let completion = { (animatedPhoto: YPMediaAnimatedPhoto) in
+                    let mediaItem = YPMediaItem.animatedPhoto(a: animatedPhoto)
+                    // Save new image or existing but modified, to the photo album.
+                    if YPConfig.shouldSaveNewPicturesToAlbum {
+                        if animatedPhoto.fromCamera {
+                            YPPhotoSaver.trySaveAnimatedImage(animatedPhoto.url, inAlbumNamed: YPConfig.albumName)
+                        }
+                    }
+                    if (self?.fitsSizeLimits(fileSize: animatedPhoto.size) ?? false) {
+                        self?.didSelect(items: [mediaItem])
+                    }
+                }
+                completion(animatedPhoto)
             case .video(let video):
                 if YPConfig.showsVideoTrimmer {
                     let videoFiltersVC = YPVideoFiltersVC.initWith(video: video,
                                                                    isFromSelectionVC: false)
                     videoFiltersVC.didSave = { [weak self] outputMedia in
-                        self?.didSelect(items: [outputMedia])
+                        if self?.fitsSizeLimits(fileSize: outputMedia.size) ?? false {
+                            self?.didSelect(items: [outputMedia])
+                        }
                     }
                     self?.pushViewController(videoFiltersVC, animated: true)
                 } else {
@@ -160,7 +198,7 @@ open class YPImagePicker: UINavigationController {
     }
     
     private func setupLoadingView() {
-        view.sv(
+        view.subviews(
             loadingView
         )
         loadingView.fillContainer()
@@ -176,5 +214,64 @@ extension YPImagePicker: YPPickerVCDelegate {
     func shouldAddToSelection(indexPath: IndexPath, numSelections: Int) -> Bool {
         return self.imagePickerDelegate?.shouldAddToSelection(indexPath: indexPath, numSelections: numSelections)
             ?? true
+    }
+}
+
+extension UIViewController {
+    func fitsSizeLimits(fileSize: Int64, showModal: Bool = true) -> Bool {
+        let tooLong: Bool
+        if let librarySizeLimit = YPConfig.sizeLimit {
+            tooLong = fileSize > librarySizeLimit
+        } else {
+            tooLong = false
+        }
+
+        if tooLong {
+            if showModal {
+                DispatchQueue.main.async {
+                    let alert = YPAlert.sizeTooLongAlert(self.view)
+                    self.present(alert, animated: true, completion: nil)
+                }
+            }
+            return false
+        }
+
+        return true
+    }
+}
+
+extension URL {
+    func getSize() -> Int64 {
+        let size: Int = (try? self.resourceValues(forKeys:[.fileSizeKey]).fileSize) ?? .zero
+        return Int64(size)
+    }
+}
+
+extension PHAsset {
+    func getSize() -> Int64 {
+        let resource = PHAssetResource.assetResources(for: self)
+        return (resource.first?.value(forKey: "fileSize") as? Int64) ?? .zero
+    }
+}
+
+extension Data {
+    func getSize() -> Int64 {
+        return Int64(self.count)
+    }
+}
+
+extension UIImage {
+    func getSize() -> Int64 {
+        return (self.pngData() ?? self.jpegData(compressionQuality: 1.0))?.getSize() ?? .zero
+    }
+}
+
+extension Double {
+    func removeZerosFromEnd() -> String {
+        let formatter = NumberFormatter()
+        let number = NSNumber(value: self)
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 3
+        return String(formatter.string(from: number) ?? "")
     }
 }

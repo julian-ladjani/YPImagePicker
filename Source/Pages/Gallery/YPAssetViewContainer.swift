@@ -88,7 +88,7 @@ class YPAssetViewContainer: UIView {
         }
         
         // Multiple selection button
-        sv(multipleSelectionButton)
+        subviews(multipleSelectionButton)
         multipleSelectionButton.size(42)
         multipleSelectionButton-15-|
         multipleSelectionButton.setImage(YPConfig.icons.multipleSelectionOffIcon, for: .normal)
@@ -112,7 +112,7 @@ class YPAssetViewContainer: UIView {
         } else {
             if let image = zoomableView?.assetImageView.image {
                 let isImageASquare = image.size.width == image.size.height
-                squareCropButton.isHidden = isImageASquare
+                squareCropButton.isHidden = isImageASquare || !(zoomableView?.canZoom ?? true)
             }
         }
         

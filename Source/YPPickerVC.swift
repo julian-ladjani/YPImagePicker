@@ -47,6 +47,13 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     open override func viewDidLoad() {
         super.viewDidLoad()
 
+        if #available(iOS 15, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            navigationController?.navigationBar.scrollEdgeAppearance = appearance
+            navigationController?.navigationBar.standardAppearance = appearance
+        }
+
         view.backgroundColor = YPConfig.colors.safeAreaBackgroundColor
         
         delegate = self
@@ -284,7 +291,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
 
             // Disable Next Button until minNumberOfItems is reached.
             navigationItem.rightBarButtonItem?.isEnabled =
-                libraryVC!.selectedItems.count >= YPConfig.library.minNumberOfItems
+                (libraryVC?.selection.count ?? 0) >= YPConfig.library.minNumberOfItems
 
         case .camera:
             navigationItem.titleView = nil
@@ -318,6 +325,8 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         if mode == .library {
             libraryVC.selectedMedia(photoCallback: { photo in
                 self.didSelectItems?([YPMediaItem.photo(p: photo)])
+            }, animatedPhotoCallback: { animatedPhoto in
+                self.didSelectItems?([YPMediaItem.animatedPhoto(a: animatedPhoto)])
             }, videoCallback: { video in
                 self.didSelectItems?([YPMediaItem
                                         .video(v: video)])
@@ -363,12 +372,11 @@ extension YPPickerVC: YPLibraryViewDelegate {
     }
     
     public func libraryViewDidToggleMultipleSelection(enabled: Bool) {
-        var offset = v.header.frame.height
-        if #available(iOS 11.0, *) {
-            offset += v.safeAreaInsets.bottom
-        }
-        
-        v.header.bottomConstraint?.constant = enabled ? offset : 0
+        let bottomOffset = v.safeAreaInsets.bottom
+        let offset = v.header.frame.height + bottomOffset
+
+        v.header.bottomConstraint?.constant = enabled ? -offset : 0
+        v.bottomView.bottomConstraint?.constant = enabled ? -bottomOffset : 0
         v.layoutIfNeeded()
         updateUI()
     }

@@ -34,6 +34,9 @@ public struct YPImagePickerConfiguration {
     
     /// Library configuration
     public var library = YPConfigLibrary()
+
+    /// Photo configuration
+    public var photo = YPConfigPhoto()
     
     /// Video configuration
     public var video = YPConfigVideo()
@@ -55,6 +58,8 @@ public struct YPImagePickerConfiguration {
 
     /// Scroll to change modes, defaults to true
     public var isScrollToChangeModesEnabled = true
+
+    public var sizeLimit: Int64? = nil
 
     /// Set this to true if you want to force the camera output to be a squared image. Defaults to true
     public var onlySquareImagesFromCamera = true
@@ -89,10 +94,6 @@ public struct YPImagePickerConfiguration {
     
     /// Controls the visibility of a grid on crop stage. Default it false
     public var showsCropGridOverlay = false
-    
-    /// Ex: cappedTo:1024 will make sure images from the library or the camera will be
-    /// resized to fit in a 1024x1024 box. Defaults to original image size.
-    public var targetImageSize = YPImageSize.original
     
     /// Adds a Overlay View to the camera
     public var overlayView: UIView?
@@ -200,6 +201,10 @@ public struct YPConfigLibrary {
     /// If you define custom options PHFetchOptions var, than this will not work.
     public var mediaType = YPlibraryMediaType.photo
 
+    /// Ex: cappedTo:1024 will make sure images from the library or the camera will be
+    /// resized to fit in a 1024x1024 box. Defaults to original image size.
+    public var targetImageSize = YPImageSize.original
+
     /// Initial state of multiple selection button.
     public var defaultMultipleSelection = false
 
@@ -292,6 +297,11 @@ public struct YPConfigVideo {
 public struct YPConfigSelectionsGallery {
     /// Defines if the remove button should be hidden when showing the gallery. Default is true.
     public var hidesRemoveButton = true
+}
+
+public struct YPConfigPhoto {
+    public var targetImageSize = YPImageSize.original
+    public var targetImageCompression: CGFloat = 1.0
 }
 
 public enum YPItemOverlayType {

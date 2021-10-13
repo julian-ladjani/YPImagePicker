@@ -92,10 +92,15 @@ class YPVideoCaptureHelper: NSObject {
             }
             
             // Re Add audio recording
-            for device in AVCaptureDevice.devices(for: .audio) {
+            let deviceDescoverySession = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInMicrophone],
+                mediaType: .audio,
+                position: .unspecified
+            )
+            deviceDescoverySession.devices.forEach { [weak self] device in
                 if let audioInput = try? AVCaptureDeviceInput(device: device) {
-                    if strongSelf.session.canAddInput(audioInput) {
-                        strongSelf.session.addInput(audioInput)
+                    if self?.session.canAddInput(audioInput) ?? false {
+                        self?.session.addInput(audioInput)
                     }
                 }
             }
@@ -217,17 +222,22 @@ class YPVideoCaptureHelper: NSObject {
             }
             
             // Add audio recording
-            for device in AVCaptureDevice.devices(for: .audio) {
+            let deviceDescoverySession = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInMicrophone],
+                mediaType: .audio,
+                position: .unspecified
+            )
+            deviceDescoverySession.devices.forEach { [weak self] device in
                 if let audioInput = try? AVCaptureDeviceInput(device: device) {
-                    if session.canAddInput(audioInput) {
-                        session.addInput(audioInput)
+                    if self?.session.canAddInput(audioInput) ?? false {
+                        self?.session.addInput(audioInput)
                     }
                 }
             }
             
             let timeScale: Int32 = 30 // FPS
             let maxDuration =
-                CMTimeMakeWithSeconds(self.videoRecordingTimeLimit, preferredTimescale: timeScale)
+                self.videoRecordingTimeLimit > .zero ? CMTimeMakeWithSeconds(self.videoRecordingTimeLimit, preferredTimescale: timeScale) : CMTime.invalid
             videoOutput.maxRecordedDuration = maxDuration
             if let sizeLimit = YPConfig.video.recordingSizeLimit {
                 videoOutput.maxRecordedFileSize = sizeLimit
@@ -254,8 +264,10 @@ class YPVideoCaptureHelper: NSObject {
         var progress: Float
         if let recordingSizeLimit = YPConfig.video.recordingSizeLimit {
             progress = Float(videoOutput.recordedFileSize) / Float(recordingSizeLimit)
-        } else {
+        } else if videoRecordingTimeLimit > .zero  {
             progress = Float(timeElapsed) / Float(videoRecordingTimeLimit)
+        } else {
+            progress = .zero
         }
         // VideoOutput configuration is responsible for stopping the recording. Not here.
         DispatchQueue.main.async {
