@@ -22,10 +22,16 @@ internal struct YPPermissionManager {
         }
 
         switch status {
-        case .authorized:
-            completion(true)
-        case .limited:
-            completion(true)
+        case .authorized, .limited:
+            let fetchOptions = PHFetchOptions()
+            if PHAsset.fetchAssets(with: .image, options: fetchOptions).count == .zero {
+                let alert = YPPermissionDeniedPopup.buildGoToSettingsAlert(cancelBlock: {
+                    completion(false)
+                })
+                sourceVC.present(alert, animated: true, completion: nil)
+            } else {
+                completion(true)
+            }
         case .restricted, .denied:
             let alert = YPPermissionDeniedPopup.buildGoToSettingsAlert(cancelBlock: {
                 completion(false)
@@ -35,14 +41,24 @@ internal struct YPPermissionManager {
             // Show permission popup and get new status
             if #available(iOS 14, *) {
                 PHPhotoLibrary.requestAuthorization(for: .readWrite) { s in
-                    DispatchQueue.main.async {
-                        completion(s == .authorized || s == .limited)
+                    DispatchQueue.main.async { [weak sourceVC] in
+                        guard let sourceVC = sourceVC else { return }
+                        if s == .authorized || s == .limited {
+                            checkLibraryPermissionAndAskIfNeeded(sourceVC: sourceVC, completion: completion)
+                        } else {
+                            completion(false)
+                        }
                     }
                 }
             } else {
                 PHPhotoLibrary.requestAuthorization { s in
-                    DispatchQueue.main.async {
-                        completion(s == .authorized)
+                    DispatchQueue.main.async { [weak sourceVC] in
+                        guard let sourceVC = sourceVC else { return }
+                        if s == .authorized {
+                            checkLibraryPermissionAndAskIfNeeded(sourceVC: sourceVC, completion: completion)
+                        } else {
+                            completion(false)
+                        }
                     }
                 }
             }

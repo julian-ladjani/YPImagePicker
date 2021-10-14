@@ -8,8 +8,8 @@
 "YPImagePickerNext" = "Suivant";
 "YPImagePickerOk" = "Ok"; //ignore-same-translation-warning
 "YPImagePickerPermissionDeniedPopupCancel" = "Annuler";
-"YPImagePickerPermissionDeniedPopupGrantPermission" = "Donner la permission";
-"YPImagePickerPermissionDeniedPopupMessage" = "Vous devez autoriser l'accès";
+"YPImagePickerPermissionDeniedPopupGrantPermission" = "Autoriser l'accès";
+"YPImagePickerPermissionDeniedPopupMessage" = "Vous devez autoriser l'accès à votre bibliothèque d'image et/ou à votre caméra";
 "YPImagePickerPermissionDeniedPopupTitle" = "Permission refusée";
 "YPImagePickerPhoto" = "Photo"; //ignore-same-translation-warning
 "YPImagePickerProcessing" = "Chargement..";
@@ -20,3 +20,9 @@
 "YPImagePickerVideoTooLong" = "La durée d'une vidéo ne doit pas dépasser %@ secondes";
 "YPImagePickerVideoTooShort" = "La vidéo doit durer %@ secondes ou plus";
 "YPImagePickerWarningItemsLimit" = "La limite est de %d photos ou vidéos";
+"YPImagePickerWarningItemsLimit" = "La limite est de %d photos ou vidéos";
+"YPImagePickerWarningItemsLimit" = "La limite est de %d photos ou vidéos";
+"YPImagePickerLibrarySizeTitle" = "Taille du fichier";
+"YPImagePickerLibrarySizeTooLong" = "La taille du fichier ne doit pas dépasser %@ Mo";
+"YPImagePickerLibrarySeveralSizeTitle" = "Taille des fichiers";
+"YPImagePickerLibrarySeveralSizeTooLong" = "Les fichiers ne peuvent pas dépasser la taille de %@ Mo";

@@ -32,6 +32,29 @@ public class YPPhotoSaver {
             albumChangeRequest?.addAssets(enumeration)
         })
     }
+
+    class func trySaveAnimatedImage(_ url: URL, inAlbumNamed: String) {
+        if PHPhotoLibrary.authorizationStatus() == .authorized {
+            if let album = album(named: inAlbumNamed) {
+                saveAnimatedImage(url, toAlbum: album)
+            } else {
+                createAlbum(withName: inAlbumNamed) {
+                    if let album = album(named: inAlbumNamed) {
+                        saveAnimatedImage(url, toAlbum: album)
+                    }
+                }
+            }
+        }
+    }
+
+    fileprivate class func saveAnimatedImage(_ url: URL, toAlbum album: PHAssetCollection) {
+        PHPhotoLibrary.shared().performChanges({
+            guard let changeRequest = PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url) else { return }
+            let albumChangeRequest = PHAssetCollectionChangeRequest(for: album)
+            let enumeration: NSArray = [changeRequest.placeholderForCreatedAsset!]
+            albumChangeRequest?.addAssets(enumeration)
+        })
+    }
     
     fileprivate class func createAlbum(withName name: String, completion:@escaping () -> Void) {
         PHPhotoLibrary.shared().performChanges({

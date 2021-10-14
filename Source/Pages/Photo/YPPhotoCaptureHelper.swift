@@ -118,24 +118,11 @@ extension YPPhotoCaptureHelper {
 }
 
 extension YPPhotoCaptureHelper: AVCapturePhotoCaptureDelegate {
-    @available(iOS 11.0, *)
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-        guard let data = photo.fileDataRepresentation() else { return }
+        guard let rawData = photo.fileDataRepresentation(),
+              let data = try? crop(photoData: rawData, toOutputRect: captureOutputPhotoRect)
+        else { return }
         block?(data)
-    }
-    
-    func photoOutput(_ output: AVCapturePhotoOutput,
-                     didFinishProcessingPhoto photoSampleBuffer: CMSampleBuffer?,
-                     previewPhoto previewPhotoSampleBuffer: CMSampleBuffer?,
-                     resolvedSettings: AVCaptureResolvedPhotoSettings,
-                     bracketSettings: AVCaptureBracketedStillImageSettings?,
-                     error: Error?) {
-        guard let buffer = photoSampleBuffer else { return }
-        if let data = AVCapturePhotoOutput
-            .jpegPhotoDataRepresentation(forJPEGSampleBuffer: buffer,
-                                         previewPhotoSampleBuffer: previewPhotoSampleBuffer) {
-            block?(data)
-        }
     }
 }
 
@@ -156,6 +143,7 @@ private extension YPPhotoCaptureHelper {
         
         // Catpure Highest Quality possible.
         settings.isHighResolutionPhotoEnabled = true
+        settings.isAutoStillImageStabilizationEnabled = photoOutput.isStillImageStabilizationSupported
         
         // Set flash mode.
         if let deviceInput = deviceInput {
@@ -179,6 +167,10 @@ private extension YPPhotoCaptureHelper {
         }
         
         return settings
+    }
+
+    private var captureOutputPhotoRect: CGRect {
+        return videoLayer.metadataOutputRectConverted(fromLayerRect: videoLayer.bounds)
     }
     
     private func setupCaptureSession() {
@@ -250,6 +242,37 @@ private extension YPPhotoCaptureHelper {
         if session.canAddInput(deviceInput) {
             session.addInput(deviceInput)
         }
+    }
+
+    private func crop(photoData: Data, toOutputRect outputRect: CGRect) throws -> Data {
+        guard let originalImage = UIImage(data: photoData) else {
+            throw YPPhotoError("Fail generate image")
+        }
+
+        guard outputRect.width > 0, outputRect.height > 0 else {
+            throw YPPhotoError("Image is 0 sized")
+        }
+        guard var cgImage = originalImage.cgImage else {
+            throw YPPhotoError("Fail to get cgImage")
+        }
+        let width = CGFloat(cgImage.width)
+        let height = CGFloat(cgImage.height)
+        let cropRect = CGRect(x: outputRect.origin.x * width,
+                              y: outputRect.origin.y * height,
+                              width: outputRect.size.width * width,
+                              height: outputRect.size.height * height)
+
+        if let newCgImage = cgImage.cropping(to: cropRect) {
+            cgImage = newCgImage
+        } else {
+            throw YPPhotoError("Fail crop cgImage")
+        }
+        let croppedUIImage = UIImage(cgImage: cgImage, scale: 1.0, orientation: originalImage.imageOrientation)
+        let compressionQuality = YPConfig.photo.targetImageCompression
+        guard let croppedData = croppedUIImage.heicData(compressionQuality: compressionQuality) ?? croppedUIImage.jpegData(compressionQuality: compressionQuality) else {
+            throw YPPhotoError("cropped data is nil")
+        }
+        return croppedData
     }
     
     private func setCurrentOrienation() {

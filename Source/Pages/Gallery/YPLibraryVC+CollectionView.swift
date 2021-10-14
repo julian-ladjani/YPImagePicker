@@ -116,7 +116,8 @@ extension YPLibraryVC: UICollectionViewDelegate {
         let asset = mediaManager.fetchResult[indexPath.item]
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "YPLibraryViewCell",
                                                             for: indexPath) as? YPLibraryViewCell else {
-                                                                fatalError("unexpected cell in collection view")
+            //fatalError("unexpected cell in collection view")
+            return UICollectionViewCell()
         }
         cell.representedAssetIdentifier = asset.localIdentifier
         cell.multipleSelectionIndicator.selectionColor =

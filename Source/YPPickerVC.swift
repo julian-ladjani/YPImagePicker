@@ -47,6 +47,8 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     open override func viewDidLoad() {
         super.viewDidLoad()
 
+        navigationController?.setupNavigationBar()
+
         view.backgroundColor = YPConfig.colors.safeAreaBackgroundColor
         
         delegate = self
@@ -168,14 +170,57 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         if let vc = vc as? YPLibraryVC {
             vc.doAfterLibraryPermissionCheck { [weak vc] in
                 vc?.initialize()
+            } invalidBlock: { [weak self] in
+                self?.libraryViewPermissionNotGranted()
             }
         } else if let cameraVC = vc as? YPCameraVC {
-            cameraVC.start()
+            cameraVC.doAfterCameraPermissionCheck { [weak cameraVC] in
+                cameraVC?.start()
+            } invalidBlock: { [weak self] in
+                self?.cameraViewPermissionNotGranted()
+            }
         } else if let videoVC = vc as? YPVideoCaptureVC {
-            videoVC.start()
+            videoVC.doAfterCameraPermissionCheck { [weak videoVC] in
+                videoVC?.start()
+            } invalidBlock: { [weak self] in
+                self?.cameraViewPermissionNotGranted()
+            }
         }
 
         updateUI()
+
+        if vc == libraryVC {
+            libraryViewDidToggleMultipleSelection(enabled: libraryVC?.multipleSelectionEnabled ?? false)
+        } else {
+            libraryViewDidToggleMultipleSelection(enabled: false)
+        }
+    }
+
+    public func cameraViewPermissionNotGranted() {
+        let nextPage = currentPage + 1
+        let currentScreen: YPPickerScreen
+        switch mode {
+        case .library:
+            currentScreen = .library
+        case .camera:
+            currentScreen = .photo
+        case .video:
+            currentScreen = .video
+        }
+        if controllers.count > nextPage && YPImagePickerConfiguration.shared.startOnScreen == currentScreen {
+            showPage(nextPage)
+        } else {
+            dismiss(animated: true, completion: nil)
+        }
+    }
+
+    public func libraryViewPermissionNotGranted() {
+        let nextPage = currentPage + 1
+        if controllers.count > nextPage && YPImagePickerConfiguration.shared.startOnScreen == .library {
+            showPage(nextPage)
+        } else {
+            libraryViewHaveNoItems()
+        }
     }
     
     func stopCurrentCamera() {
@@ -228,7 +273,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         }
         
         if YPConfig.library.options != nil {
-            titleView.sv(
+            titleView.subviews(
                 label
             )
             |-(>=8)-label.centerHorizontally()-(>=8)-|
@@ -249,7 +294,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             button.addTarget(self, action: #selector(navBarTapped), for: .touchUpInside)
             button.setBackgroundColor(UIColor.white.withAlphaComponent(0.5), forState: .highlighted)
             
-            titleView.sv(
+            titleView.subviews(
                 label,
                 arrow,
                 button
@@ -284,7 +329,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
 
             // Disable Next Button until minNumberOfItems is reached.
             navigationItem.rightBarButtonItem?.isEnabled =
-                libraryVC!.selectedItems.count >= YPConfig.library.minNumberOfItems
+                (libraryVC?.selectedItems.count ?? 0) >= YPConfig.library.minNumberOfItems
 
         case .camera:
             navigationItem.titleView = nil
@@ -318,6 +363,8 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         if mode == .library {
             libraryVC.selectedMedia(photoCallback: { photo in
                 self.didSelectItems?([YPMediaItem.photo(p: photo)])
+            }, animatedPhotoCallback: { animatedPhoto in
+                self.didSelectItems?([YPMediaItem.animatedPhoto(a: animatedPhoto)])
             }, videoCallback: { video in
                 self.didSelectItems?([YPMediaItem
                                         .video(v: video)])
@@ -363,12 +410,11 @@ extension YPPickerVC: YPLibraryViewDelegate {
     }
     
     public func libraryViewDidToggleMultipleSelection(enabled: Bool) {
-        var offset = v.header.frame.height
-        if #available(iOS 11.0, *) {
-            offset += v.safeAreaInsets.bottom
-        }
-        
-        v.header.bottomConstraint?.constant = enabled ? offset : 0
+        let bottomOffset = v.safeAreaInsets.bottom
+        let offset = v.header.frame.height + bottomOffset
+
+        v.header.bottomConstraint?.constant = enabled ? -offset : 0
+        v.bottomView.bottomConstraint?.constant = enabled ? -bottomOffset : 0
         v.layoutIfNeeded()
         updateUI()
     }
