@@ -170,11 +170,21 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         if let vc = vc as? YPLibraryVC {
             vc.doAfterLibraryPermissionCheck { [weak vc] in
                 vc?.initialize()
+            } invalidBlock: { [weak self] in
+                self?.libraryViewPermissionNotGranted()
             }
         } else if let cameraVC = vc as? YPCameraVC {
-            cameraVC.start()
+            cameraVC.doAfterCameraPermissionCheck { [weak cameraVC] in
+                cameraVC?.start()
+            } invalidBlock: { [weak self] in
+                self?.cameraViewPermissionNotGranted()
+            }
         } else if let videoVC = vc as? YPVideoCaptureVC {
-            videoVC.start()
+            videoVC.doAfterCameraPermissionCheck { [weak videoVC] in
+                videoVC?.start()
+            } invalidBlock: { [weak self] in
+                self?.cameraViewPermissionNotGranted()
+            }
         }
 
         updateUI()
@@ -183,6 +193,33 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             libraryViewDidToggleMultipleSelection(enabled: libraryVC?.multipleSelectionEnabled ?? false)
         } else {
             libraryViewDidToggleMultipleSelection(enabled: false)
+        }
+    }
+
+    public func cameraViewPermissionNotGranted() {
+        let nextPage = currentPage + 1
+        let currentScreen: YPPickerScreen
+        switch mode {
+        case .library:
+            currentScreen = .library
+        case .camera:
+            currentScreen = .photo
+        case .video:
+            currentScreen = .video
+        }
+        if controllers.count > nextPage && YPImagePickerConfiguration.shared.startOnScreen == currentScreen {
+            showPage(nextPage)
+        } else {
+            dismiss(animated: true, completion: nil)
+        }
+    }
+
+    public func libraryViewPermissionNotGranted() {
+        let nextPage = currentPage + 1
+        if controllers.count > nextPage && YPImagePickerConfiguration.shared.startOnScreen == .library {
+            showPage(nextPage)
+        } else {
+            libraryViewHaveNoItems()
         }
     }
     

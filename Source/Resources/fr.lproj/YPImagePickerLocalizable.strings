@@ -8,8 +8,8 @@
 "YPImagePickerNext" = "Suivant";
 "YPImagePickerOk" = "Ok"; //ignore-same-translation-warning
 "YPImagePickerPermissionDeniedPopupCancel" = "Annuler";
-"YPImagePickerPermissionDeniedPopupGrantPermission" = "Donner la permission";
-"YPImagePickerPermissionDeniedPopupMessage" = "Vous devez autoriser l'accès";
+"YPImagePickerPermissionDeniedPopupGrantPermission" = "Autoriser l'accès";
+"YPImagePickerPermissionDeniedPopupMessage" = "Vous devez autoriser l'accès à votre bibliothèque d'image et/ou à votre caméra";
 "YPImagePickerPermissionDeniedPopupTitle" = "Permission refusée";
 "YPImagePickerPhoto" = "Photo"; //ignore-same-translation-warning
 "YPImagePickerProcessing" = "Chargement..";

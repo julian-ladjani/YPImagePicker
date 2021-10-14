@@ -74,6 +74,7 @@ class ExampleViewController: UIViewController {
     func showPicker() {
         var config = YPImagePickerConfiguration()
         config.screens = [.library, .photo, .video]
+        config.startOnScreen = .library
         config.maxCameraZoomFactor = 10.0
         config.onlySquareImagesFromCamera = false
         config.albumName = "PandaLab Pro"
