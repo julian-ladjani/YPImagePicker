@@ -22,7 +22,7 @@ let package = Package(
         ),
         .package(
             url: "https://github.com/SDWebImage/SDWebImage.git",
-            .exact("5.11.1")
+            .exact("5.12.1")
         )
     ],
     targets: [
