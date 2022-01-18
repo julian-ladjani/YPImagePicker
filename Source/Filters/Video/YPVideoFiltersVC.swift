@@ -39,12 +39,19 @@ public final class YPVideoFiltersVC: UIViewController, IsMediaFilterVC {
         let v = UIView()
         return v
     }()
-    private let trimmerView: TrimmerView = {
+    private lazy var trimmerView: TrimmerView = {
         let v = TrimmerView()
         v.mainColor = YPConfig.colors.trimmerMainColor
         v.handleColor = YPConfig.colors.trimmerHandleColor
         v.positionBarColor = YPConfig.colors.positionLineColor
-        v.maxDuration = YPConfig.video.trimmerMaxDuration
+
+        let videoDuration: Double = {
+            let duration = inputAsset.duration
+            let durationTime = CMTimeGetSeconds(duration)
+            return durationTime
+        }()
+
+        v.maxDuration = YPConfig.video.trimmerMaxDuration == 0 ? videoDuration : YPConfig.video.trimmerMaxDuration
         v.minDuration = YPConfig.video.trimmerMinDuration
         return v
     }()
