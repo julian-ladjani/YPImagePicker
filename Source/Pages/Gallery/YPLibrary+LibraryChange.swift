@@ -16,13 +16,13 @@ extension YPLibraryVC: PHPhotoLibraryChangeObserver {
     
     public func photoLibraryDidChange(_ changeInstance: PHChange) {
         guard let fetchResult = self.mediaManager.fetchResult,
-              let collectionChanges = changeInstance.changeDetails(for: fetchResult),
-              let collectionView = self.v.collectionView else {
+              let collectionChanges = changeInstance.changeDetails(for: fetchResult) else {
             ypLog("Some problems there.")
             return
         }
 
         DispatchQueue.main.async {
+            let collectionView = self.v.collectionView
             self.mediaManager.fetchResult = collectionChanges.fetchResultAfterChanges
             if !collectionChanges.hasIncrementalChanges || collectionChanges.hasMoves {
                 collectionView.reloadData()
@@ -57,16 +57,16 @@ extension YPLibraryVC: PHPhotoLibraryChangeObserver {
         // If no items selected in assetView, but there are already photos
         // after photoLibraryDidChange, than select first item in library.
         // It can be when user add photos from limited permission.
-        if self.mediaManager.fetchResult.count > 0,
-           selectedItems.isEmpty {
-            let newAsset = self.mediaManager.fetchResult[0]
+        if self.mediaManager.hasResultItems,
+           selectedItems.isEmpty,
+           let newAsset = self.mediaManager.getAsset(at: 0) {
             self.changeAsset(newAsset)
         }
 
         // If user decided to forbid all photos with limited permission
         // while using the lib we need to remove asset from assets view.
         if selectedItems.isEmpty == false,
-           self.mediaManager.fetchResult.count == 0 {
+           self.mediaManager.hasResultItems == false {
             self.v.assetZoomableView.clearAsset()
             self.selectedItems.removeAll()
             self.delegate?.libraryViewFinishedLoading()

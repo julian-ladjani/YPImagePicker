@@ -15,17 +15,17 @@
         "repositoryURL": "https://github.com/SDWebImage/SDWebImage.git",
         "state": {
           "branch": null,
-          "revision": "a72df4849408da7e5d3c1b586797b7c601c41d1b",
           "version": "5.12.1"
-        }
+          "revision": "a72df4849408da7e5d3c1b586797b7c601c41d1b",
+        }  
       },
       {
         "package": "Stevia",
         "repositoryURL": "https://github.com/freshOS/Stevia",
         "state": {
           "branch": null,
-          "revision": "e1e8dc40deab3a863a35a7a0aab10f7304f4b42a",
-          "version": "5.1.0"
+          "revision": "87dd17a86240f16788239a78dd8be11c4b013150",
+          "version": "4.8.0"
         }
       }
     ]

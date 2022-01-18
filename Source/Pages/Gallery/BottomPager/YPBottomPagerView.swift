@@ -23,7 +23,7 @@ final class YPBottomPagerView: UIView {
         self.init(frame: .zero)
         backgroundColor = .offWhiteOrBlack
         
-        subviews(
+        sv(
             scrollView,
             header,
             bottomView

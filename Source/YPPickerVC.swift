@@ -190,7 +190,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         updateUI()
 
         if vc == libraryVC {
-            libraryViewDidToggleMultipleSelection(enabled: libraryVC?.multipleSelectionEnabled ?? false)
+            libraryViewDidToggleMultipleSelection(enabled: libraryVC?.isMultipleSelectionEnabled ?? false)
         } else {
             libraryViewDidToggleMultipleSelection(enabled: false)
         }
@@ -273,7 +273,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         }
         
         if YPConfig.library.options != nil {
-            titleView.subviews(
+            titleView.sv(
                 label
             )
             |-(>=8)-label.centerHorizontally()-(>=8)-|
@@ -294,7 +294,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             button.addTarget(self, action: #selector(navBarTapped), for: .touchUpInside)
             button.setBackgroundColor(UIColor.white.withAlphaComponent(0.5), forState: .highlighted)
             
-            titleView.subviews(
+            titleView.sv(
                 label,
                 arrow,
                 button

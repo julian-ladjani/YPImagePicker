@@ -26,7 +26,7 @@ public class YPSelectionsGalleryCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
     
-        subviews(
+        sv(
             imageView,
             fileTooBigContainerView,
             editIcon,
@@ -34,9 +34,9 @@ public class YPSelectionsGalleryCell: UICollectionViewCell {
             removeButton
         )
 
-        fileTooBigContainerView.subviews {
+        fileTooBigContainerView.sv(
             fileTooBigLabel
-        }
+        )
 
         fileTooBigContainerView.layout(
             layout(
