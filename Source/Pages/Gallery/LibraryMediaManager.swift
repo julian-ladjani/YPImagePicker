@@ -92,9 +92,11 @@ class LibraryMediaManager {
                 let indexPaths = collectionView.aapl_indexPathsForElementsInRect(addedRect)
                 addedIndexPaths += indexPaths
             })
-            
+
+            guard fetchResult?.count ?? 0 != .zero else { return }
             guard let assetsToStartCaching = fetchResult?.assetsAtIndexPaths(absoluteIndex(addedIndexPaths)),
-                  let assetsToStopCaching = fetchResult?.assetsAtIndexPaths(absoluteIndex(removedIndexPaths)) else {
+                  let assetsToStopCaching = fetchResult?.assetsAtIndexPaths(absoluteIndex(removedIndexPaths))
+            else {
                 print("Some problems in fetching and caching assets.")
                 return
             }

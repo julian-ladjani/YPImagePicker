@@ -26,9 +26,10 @@ internal struct YPPermissionManager {
             completion(true)
         case .limited:
             let fetchOptions = PHFetchOptions()
-            if PHAsset.fetchAssets(with: .image, options: fetchOptions).count == .zero {
+            if PHAsset.fetchAssets(with: fetchOptions).count == .zero {
                 if #available(iOS 14, *) {
                     PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: sourceVC)
+                    completion(true)
                 } else {
                     let alert = YPPermissionDeniedPopup.buildGoToSettingsAlert(cancelBlock: {
                         completion(false)

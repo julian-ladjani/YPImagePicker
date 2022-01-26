@@ -192,6 +192,7 @@ final class YPAssetZoomableView: UIScrollView {
         videoView.removeFromSuperview()
         videoView.deallocate()
         photoImageView.removeFromSuperview()
+        currentAsset = nil
     }
 
     override init(frame: CGRect) {
