@@ -26,3 +26,7 @@
 "YPImagePickerLibrarySizeTooLong" = "La taille du fichier ne doit pas dépasser %@ Mo";
 "YPImagePickerLibrarySeveralSizeTitle" = "Taille des fichiers";
 "YPImagePickerLibrarySeveralSizeTooLong" = "Les fichiers ne peuvent pas dépasser la taille de %@ Mo";
+"YPImagePickerLibraryPermissionCellButton" = "Gérer";
+"YPImagePickerLibraryPermissionCellTitle" = "Vous avez autorisé %@ à accéder à un nombre limité de photos et de vidéos";
+"YPImagePickerLibraryPermissionCellSelectMore" = "Sélectionner d'autres photos";
+"YPImagePickerLibraryPermissionCellEditPermissions" = "Modifier les paramètres";

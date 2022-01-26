@@ -24,3 +24,9 @@
 "YPImagePickerWarningItemsLimit" = "The limit is %d photos or videos";
 "YPImagePickerLibrarySizeTitle" = "Asset size";
 "YPImagePickerLibrarySizeTooLong" = "Pick an asset with size less than %@ MB long";
+"YPImagePickerLibrarySeveralSizeTitle" = "Assets size";
+"YPImagePickerLibrarySeveralSizeTooLong" = "Files cannot exceed %@ MB";
+"YPImagePickerLibraryPermissionCellButton" = "Manage";
+"YPImagePickerLibraryPermissionCellTitle" = "You have granted %@ access to a limited number of photos and videos";
+"YPImagePickerLibraryPermissionCellSelectMore" = "Select more photos";
+"YPImagePickerLibraryPermissionCellEditPermissions" = "Edit app settings";

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Photos
 
 extension YPLibraryVC {
     var isLimitExceeded: Bool { return selectedItems.count >= YPConfig.library.maxNumberOfItems }
@@ -15,6 +16,7 @@ extension YPLibraryVC {
         v.collectionView.dataSource = self
         v.collectionView.delegate = self
         v.collectionView.register(YPLibraryViewCell.self, forCellWithReuseIdentifier: "YPLibraryViewCell")
+        v.collectionView.register(YPLibraryPermissionCell.self, forCellWithReuseIdentifier: "YPLibraryPermissionCell")
         
         // Long press on cell to enable multiple selection
         let longPressGR = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(longPressGR:)))
@@ -56,6 +58,7 @@ extension YPLibraryVC {
     
     /// Removes cell from selection
     func deselect(indexPath: IndexPath) {
+        guard v.collectionView.cellForItem(at: indexPath) is YPLibraryViewCell else { return }
         if let positionIndex = selectedItems.firstIndex(where: {
             $0.assetIdentifier == mediaManager.getAsset(at: indexPath.row)?.localIdentifier
 		}) {
@@ -79,6 +82,7 @@ extension YPLibraryVC {
     
     /// Adds cell to selection
     func addToSelection(indexPath: IndexPath) {
+        guard v.collectionView.cellForItem(at: indexPath) is YPLibraryViewCell else { return }
         if !(delegate?.libraryViewShouldAddToSelection(indexPath: indexPath,
                                                        numSelections: selectedItems.count) ?? true) {
             return
@@ -107,7 +111,7 @@ extension YPLibraryVC {
 
 extension YPLibraryVC: UICollectionViewDataSource {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return mediaManager.fetchResult?.count ?? 0
+        return mediaManager.cellCount()
     }
 }
 
@@ -115,6 +119,15 @@ extension YPLibraryVC: UICollectionViewDelegate {
     
     public func collectionView(_ collectionView: UICollectionView,
                                cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if #available(iOS 14, *),
+           indexPath.item == .zero,
+           PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited {
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "YPLibraryPermissionCell", for: indexPath) as? YPLibraryPermissionCell else {
+                fatalError("unexpected cell in collection view")
+            }
+            cell.delegate = self
+            return cell
+        }
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "YPLibraryViewCell", for: indexPath) as? YPLibraryViewCell else {
             fatalError("unexpected cell in collection view")
         }
@@ -165,6 +178,7 @@ extension YPLibraryVC: UICollectionViewDelegate {
     }
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard v.collectionView.cellForItem(at: indexPath) is YPLibraryViewCell else { return }
         let previouslySelectedIndexPath = IndexPath(row: currentlySelectedIndex, section: 0)
         currentlySelectedIndex = indexPath.row
 
@@ -204,10 +218,12 @@ extension YPLibraryVC: UICollectionViewDelegate {
     }
     
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        guard v.collectionView.cellForItem(at: indexPath) is YPLibraryViewCell else { return false }
         return isProcessing == false
     }
     
     public func collectionView(_ collectionView: UICollectionView, shouldDeselectItemAt indexPath: IndexPath) -> Bool {
+        guard v.collectionView.cellForItem(at: indexPath) is YPLibraryViewCell else { return false }
         return isProcessing == false
     }
 }
@@ -216,6 +232,11 @@ extension YPLibraryVC: UICollectionViewDelegateFlowLayout {
     public func collectionView(_ collectionView: UICollectionView,
                                layout collectionViewLayout: UICollectionViewLayout,
                                sizeForItemAt indexPath: IndexPath) -> CGSize {
+        if #available(iOS 14, *),
+           indexPath.item == .zero,
+           PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited {
+            return CGSize(width: UIScreen.main.bounds.width, height: 60.0)
+        }
         let margins = YPConfig.library.spacingBetweenItems * CGFloat(YPConfig.library.numberOfItemsInRow - 1)
         let width = (collectionView.frame.width - margins) / CGFloat(YPConfig.library.numberOfItemsInRow)
         return CGSize(width: width, height: width)
@@ -231,5 +252,49 @@ extension YPLibraryVC: UICollectionViewDelegateFlowLayout {
 							   layout collectionViewLayout: UICollectionViewLayout,
 							   minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
         return YPConfig.library.spacingBetweenItems
+    }
+}
+
+extension YPLibraryVC: YPLibraryPermissionCellDelegate {
+    func permissionManageButtonTouch() {
+        let actionSheet = UIAlertController(
+            title: nil,
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+
+        let selectPhotosAction = UIAlertAction(
+            title: YPConfig.wordings.libraryPermissionCell.selectMore,
+            style: .default
+        ) { [weak self] (_) in
+            if #available(iOS 14, *), let self = self {
+                PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
+            }
+        }
+
+        actionSheet.addAction(selectPhotosAction)
+
+        let allowFullAccessAction = UIAlertAction(
+            title: YPConfig.wordings.libraryPermissionCell.editPermissions,
+            style: .default
+        ) { [weak self] (_) in
+            // Open app privacy settings
+            self?.gotoAppPrivacySettings()
+        }
+        actionSheet.addAction(allowFullAccessAction)
+
+        let cancelAction = UIAlertAction(title: YPConfig.wordings.cancel, style: .cancel, handler: nil)
+        actionSheet.addAction(cancelAction)
+
+        present(actionSheet, animated: true, completion: nil)
+    }
+
+    func gotoAppPrivacySettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString),
+              UIApplication.shared.canOpenURL(url) else {
+                  assertionFailure("Not able to open App privacy settings")
+                  return
+              }
+        UIApplication.shared.open(url, options: [:], completionHandler: nil)
     }
 }

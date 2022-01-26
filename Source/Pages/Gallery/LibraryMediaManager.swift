@@ -37,6 +37,39 @@ class LibraryMediaManager {
         imageManager?.stopCachingImagesForAllAssets()
         previousPreheatRect = .zero
     }
+
+    func cellCount() -> Int {
+        let fetchResultCount = fetchResult?.count ?? .zero
+        if #available(iOS 14, *),
+           PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited {
+            return fetchResultCount + 1
+        }
+        return fetchResultCount
+    }
+
+    func absoluteIndex(_ index: IndexPath) -> IndexPath {
+        if #available(iOS 14, *),
+           PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited {
+            var newIndex = index
+            newIndex.item = newIndex.item > 0 ? newIndex.item - 1 : 0
+            return newIndex
+        }
+        return index
+    }
+
+    func absoluteIndex(_ index: Int) -> Int {
+        if #available(iOS 14, *),
+           PHPhotoLibrary.authorizationStatus(for: .readWrite) == .limited {
+            return index > 0 ? index - 1 : 0
+        }
+        return index
+    }
+
+    func absoluteIndex(_ indexPaths: [IndexPath]) -> [IndexPath] {
+        return Array(Set(indexPaths.compactMap { index in
+            return absoluteIndex(index)
+        }))
+    }
     
     func updateCachedAssets(in collectionView: UICollectionView) {
         let screenWidth = YPImagePickerConfiguration.screenWidth
@@ -60,8 +93,8 @@ class LibraryMediaManager {
                 addedIndexPaths += indexPaths
             })
             
-            guard let assetsToStartCaching = fetchResult?.assetsAtIndexPaths(addedIndexPaths),
-                  let assetsToStopCaching = fetchResult?.assetsAtIndexPaths(removedIndexPaths) else {
+            guard let assetsToStartCaching = fetchResult?.assetsAtIndexPaths(absoluteIndex(addedIndexPaths)),
+                  let assetsToStopCaching = fetchResult?.assetsAtIndexPaths(absoluteIndex(removedIndexPaths)) else {
                 print("Some problems in fetching and caching assets.")
                 return
             }
@@ -224,10 +257,10 @@ class LibraryMediaManager {
             print("FetchResult not contain this index: \(index)")
             return nil
         }
-        guard fetchResult.count > index else {
+        guard fetchResult.count > absoluteIndex(index) else {
             print("FetchResult not contain this index: \(index)")
             return nil
         }
-        return fetchResult.object(at: index)
+        return fetchResult.object(at: absoluteIndex(index))
     }
 }

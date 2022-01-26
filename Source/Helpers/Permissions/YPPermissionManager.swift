@@ -22,13 +22,19 @@ internal struct YPPermissionManager {
         }
 
         switch status {
-        case .authorized, .limited:
+        case .authorized:
+            completion(true)
+        case .limited:
             let fetchOptions = PHFetchOptions()
             if PHAsset.fetchAssets(with: .image, options: fetchOptions).count == .zero {
-                let alert = YPPermissionDeniedPopup.buildGoToSettingsAlert(cancelBlock: {
-                    completion(false)
-                })
-                sourceVC.present(alert, animated: true, completion: nil)
+                if #available(iOS 14, *) {
+                    PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: sourceVC)
+                } else {
+                    let alert = YPPermissionDeniedPopup.buildGoToSettingsAlert(cancelBlock: {
+                        completion(false)
+                    })
+                    sourceVC.present(alert, animated: true, completion: nil)
+                }
             } else {
                 completion(true)
             }

@@ -46,6 +46,7 @@ public struct YPColors {
 
     /// A color for for bottom buttons selected text.
     public var bottomMenuItemSelectedTextColor: UIColor = .ypLabel
+    
 
     /// A color for for bottom buttons not selected text.
     public var bottomMenuItemUnselectedTextColor: UIColor = .ypSecondaryLabel
@@ -55,6 +56,9 @@ public struct YPColors {
 
     /// The default color of all navigation bars except album's.
     public var defaultNavigationBarColor: UIColor = .offWhiteOrBlack
+
+    public var limitedLibraryPermissionLabelColor: UIColor = .ypSecondaryLabel
+    public var limitedLibraryPermissionButtonColor: UIColor = .ypLabel
 
     // MARK: - Trimmer
     

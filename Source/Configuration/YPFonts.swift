@@ -23,6 +23,9 @@ public struct YPFonts {
 
     public var multipleSelectionIndicatorFont: UIFont = .systemFont(ofSize: 12, weight: .regular)
 
+    public var limitedLibraryPermissionTitleFont: UIFont = .systemFont(ofSize: 12, weight: .regular)
+    public var limitedLibraryPermissionButtonFont: UIFont = .systemFont(ofSize: 17, weight: .regular)
+
     public var albumCellTitleFont: UIFont = .systemFont(ofSize: 16, weight: .regular)
 
     public var albumCellNumberOfItemsFont: UIFont = .systemFont(ofSize: 12, weight: .regular)
