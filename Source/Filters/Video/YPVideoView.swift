@@ -18,6 +18,7 @@ public class YPVideoView: UIView {
     internal let playerView = UIView()
     internal let playerLayer = AVPlayerLayer()
     internal var previewImageView = UIImageView()
+    internal var waitLoading: Bool = true
     
     public var player: AVPlayer {
         guard let player = playerLayer.player else {
@@ -70,6 +71,7 @@ public class YPVideoView: UIView {
     }
     
     @objc internal func singleTap() {
+        guard !waitLoading else { return }
         pauseUnpause()
     }
     
@@ -96,7 +98,8 @@ extension YPVideoView {
         default:
             return
         }
-        
+
+        waitLoading = false
         playerLayer.player = player
         playerView.alpha = 1
         setNeedsLayout()
@@ -139,6 +142,9 @@ extension YPVideoView {
 // MARK: - Other API
 extension YPVideoView {
     public func setPreviewImage(_ image: UIImage) {
+        playerView.alpha = .zero
+        waitLoading = true
+        showPlayImage(show: false)
         previewImageView.image = image
     }
     
