@@ -24,7 +24,7 @@ final class YPAssetViewContainer: UIView {
         label.textColor = YPConfig.colors.libraryEmptyStateTitle
         return label
     }()
-    private lazy var emptyImageView = UIImageView(image: #imageLiteral(resourceName: "yp_no_media").sd_tintedImage(with: YPConfig.colors.libraryEmptyStateImage))
+    private lazy var emptyImageView = UIImageView(image: YPConfig.icons.emptyMediaImage.sd_tintedImage(with: YPConfig.colors.libraryEmptyStateImage))
     public var itemOverlay: UIView?
     public let curtain = UIView()
     public let spinnerView = UIView()
@@ -46,7 +46,7 @@ final class YPAssetViewContainer: UIView {
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
-        emptyImageView.image = #imageLiteral(resourceName: "yp_no_media").sd_tintedImage(with: YPConfig.colors.libraryEmptyStateImage)
+        emptyImageView.image = YPConfig.icons.emptyMediaImage.sd_tintedImage(with: YPConfig.colors.libraryEmptyStateImage)
     }
 
     init(frame: CGRect, zoomableView: YPAssetZoomableView) {
