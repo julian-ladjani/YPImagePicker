@@ -48,19 +48,39 @@ extension YPLibraryVC: PHPhotoLibraryChangeObserver {
                 })
             }
 
-            self.updateAssetSelection()
+            self.updateAssetSelection(
+                hasChangedIndexes: !(collectionChanges.changedIndexes?.isEmpty ?? true),
+                hasInsertedIndexes: !(collectionChanges.insertedIndexes?.isEmpty ?? true),
+                hasRemovedIndexes: !(collectionChanges.removedIndexes?.isEmpty ?? true)
+            )
             self.mediaManager.resetCachedAssets()
         }
     }
 
-    fileprivate func updateAssetSelection() {
-        selectedItems.removeAll()
-        currentlySelectedIndex = 0
-        self.v.assetZoomableView.clearAsset()
+    fileprivate func updateAssetSelection(hasChangedIndexes: Bool, hasInsertedIndexes: Bool, hasRemovedIndexes: Bool) {
 
-        self.delegate?.libraryViewFinishedLoading()
-        if let asset = mediaManager.fetchResult?.firstObject {
-            self.changeAsset(asset)
+        if !hasRemovedIndexes && !hasInsertedIndexes && !hasChangedIndexes {
+            selectedItems.removeAll()
+            currentlySelectedIndex = 0
+            self.v.assetZoomableView.clearAsset()
+
+            self.delegate?.libraryViewFinishedLoading()
+            if let asset = mediaManager.fetchResult?.firstObject {
+                self.changeAsset(asset)
+            }
+        } else {
+            if self.mediaManager.hasResultItems,
+               selectedItems.isEmpty,
+               let newAsset = self.mediaManager.getAsset(at: 0) {
+                self.changeAsset(newAsset)
+            }
+
+            if selectedItems.isEmpty == false,
+               self.mediaManager.hasResultItems == false {
+                self.v.assetZoomableView.clearAsset()
+                self.selectedItems.removeAll()
+                self.delegate?.libraryViewFinishedLoading()
+            }
         }
     }
 }
