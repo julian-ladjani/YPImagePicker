@@ -130,6 +130,10 @@ internal final class YPLibraryView: UIView {
         assetViewContainer.spinnerView.alpha = 0
     }
 
+    func updateEmptyState() {
+        assetViewContainer.updateEmptyViewState()
+    }
+
     func updateProgress(_ progress: Float) {
         progressView.isHidden = progress > 0.99 || progress == 0
         progressView.progress = progress

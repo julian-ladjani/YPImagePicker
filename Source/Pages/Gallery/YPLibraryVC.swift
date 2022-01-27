@@ -251,6 +251,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
             }
         } else {
             delegate?.libraryViewHaveNoItems()
+            delegate?.libraryViewFinishedLoading()
         }
 
         scrollToTop()
@@ -298,6 +299,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 self.v.hideLoader()
                 self.delegate?.libraryViewFinishedLoading()
             }
+            self.v.updateEmptyState()
         }
 
         let animatedCompletion = { (isLowResIntermediaryImage: Bool) in
@@ -309,6 +311,7 @@ internal final class YPLibraryVC: UIViewController, YPPermissionCheckable {
                 self.v.hideLoader()
                 self.delegate?.libraryViewFinishedLoading()
             }
+            self.v.updateEmptyState()
         }
         
         let updateCropInfo = {

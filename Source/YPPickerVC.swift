@@ -405,6 +405,7 @@ extension YPPickerVC: YPLibraryViewDelegate {
         DispatchQueue.main.async {
             self.v.scrollView.isScrollEnabled = YPConfig.isScrollToChangeModesEnabled
             self.libraryVC?.v.hideLoader()
+            self.libraryVC?.v.updateEmptyState()
             self.updateUI()
         }
     }

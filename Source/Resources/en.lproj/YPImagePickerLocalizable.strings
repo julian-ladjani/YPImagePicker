@@ -30,3 +30,4 @@
 "YPImagePickerLibraryPermissionCellTitle" = "You have granted %@ access to a limited number of photos and videos";
 "YPImagePickerLibraryPermissionCellSelectMore" = "Select more photos";
 "YPImagePickerLibraryPermissionCellEditPermissions" = "Edit app settings";
+"YPImagePickerLibraryEmptyStateTitle" = "No media is selected";

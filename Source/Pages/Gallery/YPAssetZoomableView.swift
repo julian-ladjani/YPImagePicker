@@ -9,6 +9,7 @@
 
 import UIKit
 import Photos
+import Stevia
 
 protocol YPAssetZoomableViewDelegate: AnyObject {
     func ypAssetZoomableViewDidLayoutSubviews(_ zoomableView: YPAssetZoomableView)
@@ -67,7 +68,13 @@ final class YPAssetZoomableView: UIScrollView {
             setContentOffset(contentOffset, animated: false)
         }
     }
-    
+
+    public func hasCurrentAsset() -> Bool {
+        return currentAsset != nil ||
+        (videoView.superview == self && videoView.previewImageView.image != nil) ||
+        (photoImageView.superview == self && photoImageView.image != nil)
+    }
+
     public func setVideo(_ video: PHAsset,
                          mediaManager: LibraryMediaManager,
                          storedCropPosition: YPLibrarySelection?,
@@ -210,6 +217,7 @@ final class YPAssetZoomableView: UIScrollView {
         alwaysBounceHorizontal = true
         alwaysBounceVertical = true
         isScrollEnabled = true
+
     }
 
     required init?(coder aDecoder: NSCoder) {

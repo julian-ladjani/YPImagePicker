@@ -14,6 +14,17 @@ import AVFoundation
 /// The container for asset (video or image). It containts the YPGridView and YPAssetZoomableView.
 final class YPAssetViewContainer: UIView {
     public var zoomableView: YPAssetZoomableView
+    private lazy var emptyContainer = UIView()
+    private lazy var emptyContent = UIView()
+    private lazy var emptyLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.numberOfLines = 0
+        label.text = YPConfig.wordings.libraryEmptyStateTitle
+        label.textColor = YPConfig.colors.libraryEmptyStateTitle
+        return label
+    }()
+    private lazy var emptyImageView = UIImageView(image: #imageLiteral(resourceName: "yp_no_media").sd_tintedImage(with: YPConfig.colors.libraryEmptyStateImage))
     public var itemOverlay: UIView?
     public let curtain = UIView()
     public let spinnerView = UIView()
@@ -32,6 +43,11 @@ final class YPAssetViewContainer: UIView {
     private var isMultipleSelectionEnabled = false
 
     public var itemOverlayType = YPConfig.library.itemOverlayType
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        emptyImageView.image = #imageLiteral(resourceName: "yp_no_media").sd_tintedImage(with: YPConfig.colors.libraryEmptyStateImage)
+    }
 
     init(frame: CGRect, zoomableView: YPAssetZoomableView) {
         self.zoomableView = zoomableView
@@ -66,13 +82,31 @@ final class YPAssetViewContainer: UIView {
             spinnerView.sv(
                 spinner
             ),
+            emptyContainer.sv(emptyContent),
             curtain
         )
+
+        emptyContent.sv(
+            emptyImageView,
+            emptyLabel
+        )
+
+        emptyContainer.layout(
+            16,
+            emptyImageView.size(64.0),
+            16,
+            |-emptyLabel-|,
+            16
+        )
+        emptyImageView.centerHorizontally()
+        emptyContainer.fillContainer()
+        emptyContent.centerInContainer()
 
         spinner.centerInContainer()
         spinnerView.fillContainer()
         curtain.fillContainer()
 
+        emptyContainer.isHidden = true
         spinner.startAnimating()
         spinnerView.backgroundColor = UIColor.ypLabel.withAlphaComponent(0.3)
         curtain.backgroundColor = UIColor.ypLabel.withAlphaComponent(0.7)
@@ -128,6 +162,13 @@ final class YPAssetViewContainer: UIView {
         let isImageASquare = selectedAssetImage.size.width == selectedAssetImage.size.height
         squareCropButton.isHidden = isImageASquare
     }
+
+    public func updateEmptyViewState() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.emptyContainer.isHidden = self.zoomableView.hasCurrentAsset() || self.spinnerView.alpha != 0
+        }
+    }
     
     // MARK: - Multiple selection
 
@@ -157,6 +198,7 @@ extension YPAssetViewContainer: YPAssetZoomableViewDelegate {
             self.addSubview(zoomableView.videoView.playImageView)
             zoomableView.videoView.playImageView.centerInContainer()
         }
+        updateEmptyViewState()
     }
     
     public func ypAssetZoomableViewScrollViewDidZoom() {

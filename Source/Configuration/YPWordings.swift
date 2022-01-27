@@ -58,4 +58,5 @@ public struct YPWordings {
     public var crop = ypLocalized("YPImagePickerCrop")
     public var warningMaxItemsLimit = ypLocalized("YPImagePickerWarningItemsLimit")
     public var fileTooBigWarning = ypLocalized("YPImagePickerLibrarySizeTooLong")
+    public var libraryEmptyStateTitle = ypLocalized("YPImagePickerLibraryEmptyStateTitle")
 }
