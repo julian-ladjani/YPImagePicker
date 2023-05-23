@@ -1,34 +1,32 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "PryntTrimmerView",
-        "repositoryURL": "https://github.com/HHK1/PryntTrimmerView",
-        "state": {
-          "branch": null,
-          "revision": "ac1b60a22c7e6a6514de7a66d2f3d5b537c956d5",
-          "version": "4.0.2"
-        }
-      },
-      {
-        "package": "SDWebImage",
-        "repositoryURL": "https://github.com/SDWebImage/SDWebImage.git",
-        "state": {
-          "branch": null,
-          "revision": "76dd4b49110b8624317fc128e7fa0d8a252018bc",
-          "version": "5.11.1"
-        }
-      },
-      {
-        "package": "Stevia",
-        "repositoryURL": "https://github.com/freshOS/Stevia",
-        "state": {
-          "branch": null,
-          "revision": "87dd17a86240f16788239a78dd8be11c4b013150",
-          "version": "4.8.0"
-        }
+  "pins" : [
+    {
+      "identity" : "prynttrimmerview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/HHK1/PryntTrimmerView",
+      "state" : {
+        "revision" : "ac1b60a22c7e6a6514de7a66d2f3d5b537c956d5",
+        "version" : "4.0.2"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "sdwebimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SDWebImage/SDWebImage.git",
+      "state" : {
+        "revision" : "7f9fb5d43ecd4aa714c00746f54873f354403438",
+        "version" : "5.15.8"
+      }
+    },
+    {
+      "identity" : "stevia",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/freshOS/Stevia",
+      "state" : {
+        "revision" : "87dd17a86240f16788239a78dd8be11c4b013150",
+        "version" : "4.8.0"
+      }
+    }
+  ],
+  "version" : 2
 }

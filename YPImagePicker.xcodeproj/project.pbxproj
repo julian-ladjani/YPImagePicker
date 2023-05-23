@@ -1403,7 +1403,7 @@
 			repositoryURL = "https://github.com/SDWebImage/SDWebImage.git";
 			requirement = {
 				kind = exactVersion;
-				version = 5.11.1;
+				version = 5.15.8;
 			};
 		};
 		EBA37BCB26F75BCC005DAAD4 /* XCRemoteSwiftPackageReference "Stevia" */ = {
